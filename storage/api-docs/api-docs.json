@@ -6,6 +6,689 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/debt-groups": {
+            "get": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Daftar Debt Group",
+                "operationId": "a04e5093506cf35fd50c82640d77d546",
+                "responses": {
+                    "200": {
+                        "description": "Daftar Debt Group",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Hutang Proyek A"
+                                                    },
+                                                    "total_amount": {
+                                                        "type": "number",
+                                                        "example": 1500000
+                                                    },
+                                                    "remaining_amount": {
+                                                        "type": "number",
+                                                        "example": 1000000
+                                                    },
+                                                    "items_count": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "payments_count": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Tambah Debt Group",
+                "operationId": "a887d0bcfdc6174a81bc83518cde67e2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Hutang Proyek A"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Grup hutang berhasil ditambahkan."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{id}": {
+            "get": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Detail Debt Group",
+                "operationId": "b75335bbdd17d12ce31e0d1ea0c99834",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail Debt Group",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Hutang Proyek A"
+                                        },
+                                        "total_amount": {
+                                            "type": "number",
+                                            "example": 1500000
+                                        },
+                                        "remaining_amount": {
+                                            "type": "number",
+                                            "example": 1000000
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "no": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Beli material"
+                                                    },
+                                                    "trans_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-07-23"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "example": 1500000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "payments": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Cicilan 1"
+                                                    },
+                                                    "payment_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-07-24"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "example": 500000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Update Debt Group",
+                "operationId": "2c3805dc8a5e744b8509650e6249a468",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Hutang Proyek A Update"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Grup hutang berhasil diperbarui."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Hapus Debt Group",
+                "operationId": "f53853d19b1d60f124a6dee29e272834",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Grup hutang berhasil dihapus."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{debtGroup}/items": {
+            "post": {
+                "tags": [
+                    "Debt Items"
+                ],
+                "summary": "Tambah Item Hutang",
+                "operationId": "02cecdb9f30b8fede98132cbae5c7889",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "no": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Beli material"
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-23"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 150000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Item hutang berhasil ditambahkan."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{debtGroup}/items/{debtItem}": {
+            "put": {
+                "tags": [
+                    "Debt Items"
+                ],
+                "summary": "Update Item Hutang",
+                "operationId": "a267a0a406ee219266fd1615c7a92453",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "debtItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "no": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Beli material update"
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-23"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 200000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Item hutang berhasil diperbarui."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debt Items"
+                ],
+                "summary": "Hapus Item Hutang",
+                "operationId": "274a0c080760051bbc306cf987e40cef",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "debtItem",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Item hutang berhasil dihapus."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{debtGroup}/payments": {
+            "post": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Tambah Pembayaran Hutang",
+                "operationId": "b2820b359d5222b944960deab8d9e942",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Cicil bayar bulan pertama"
+                                    },
+                                    "payment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-23"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 500000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pembayaran berhasil ditambahkan."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{debtGroup}/payments/{debtPayment}": {
+            "put": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Update Pembayaran Hutang",
+                "operationId": "45e9d5430dbe73270443c8cdfdd642a2",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "debtPayment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Cicil bayar revisi"
+                                    },
+                                    "payment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-24"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 550000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pembayaran berhasil diperbarui."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Hapus Pembayaran Hutang",
+                "operationId": "a2aff0ac0188465e21f3e930995528e5",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "debtPayment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pembayaran berhasil dihapus."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/transactions": {
             "get": {
                 "tags": [
@@ -182,6 +865,18 @@
         }
     },
     "tags": [
+        {
+            "name": "Debt Groups",
+            "description": "Debt Groups"
+        },
+        {
+            "name": "Debt Items",
+            "description": "Debt Items"
+        },
+        {
+            "name": "Debt Payments",
+            "description": "Debt Payments"
+        },
         {
             "name": "Transactions",
             "description": "Transactions"
