@@ -35,8 +35,7 @@ class TransactionController extends Controller
             return $trx;
         });
 
-        // Step 3: Reverse to descending (newest on top), running balance already baked in
-        $allTransactions = $allTransactions->reverse()->values();
+        // Step 3: Keep ascending order (oldest to newest by date)
 
         // Step 4: Apply year/month filter AFTER running balance is computed
         if ($request->filled('year')) {
