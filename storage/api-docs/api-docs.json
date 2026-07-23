@@ -1,0 +1,190 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Cakra Prima",
+        "description": "Dokumentasi API Kas & Keuangan Cakra Prima",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/transactions": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Daftar transaksi",
+                "operationId": "6581469356772e7a74a0d79897544f1a",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Tambah transaksi baru",
+                "operationId": "ab765dced58cfe2f620929db31452145",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "date",
+                                    "company",
+                                    "description",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-22"
+                                    },
+                                    "company": {
+                                        "type": "string",
+                                        "example": "Cakra Prima"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Pembelian ATK"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "cash",
+                                        "enum": [
+                                            "cash",
+                                            "rek"
+                                        ]
+                                    },
+                                    "income": {
+                                        "type": "number",
+                                        "example": 500000
+                                    },
+                                    "expense": {
+                                        "type": "number",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/transactions/{id}": {
+            "put": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Update transaksi",
+                "operationId": "a3de6e068b921a033fb998246070466a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-22"
+                                    },
+                                    "company": {
+                                        "type": "string",
+                                        "example": "Cakra Prima"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Pembelian ATK"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "cash",
+                                        "enum": [
+                                            "cash",
+                                            "rek"
+                                        ]
+                                    },
+                                    "income": {
+                                        "type": "number",
+                                        "example": 500000
+                                    },
+                                    "expense": {
+                                        "type": "number",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Hapus transaksi",
+                "operationId": "5b95ee78a4db85f35f43b2b4eea85447",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/transactions-summary": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Ringkasan kas & keuangan",
+                "operationId": "8aa6ae81805b2faea1bd8442e51c303c",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Transactions",
+            "description": "Transactions"
+        }
+    ]
+}
