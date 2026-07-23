@@ -18,16 +18,50 @@ class TransactionController extends Controller
     )]
     public function index(Request $request)
     {
-        $query = Transaction::query()->orderBy('date', 'desc');
+        // Step 1: Fetch ALL rows ascending to calculate accurate running balance
+        $allTransactions = Transaction::query()
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
+        // Step 2: Calculate running balance for every row
+        $runningBalance = 0;
+        $allTransactions = $allTransactions->map(function ($trx) use (&$runningBalance) {
+            $runningBalance += (float) $trx->income - (float) $trx->expense;
+            $trx->rekap_saldo = $runningBalance;
+            return $trx;
+        });
+
+        // Step 3: Reverse to descending (newest on top), running balance already baked in
+        $allTransactions = $allTransactions->reverse()->values();
+
+        // Step 4: Apply year/month filter AFTER running balance is computed
         if ($request->filled('year')) {
-            $query->whereYear('date', $request->year);
+            $allTransactions = $allTransactions->filter(function ($trx) use ($request) {
+                return date('Y', strtotime($trx->date)) == $request->year;
+            })->values();
         }
         if ($request->filled('month')) {
-            $query->whereMonth('date', $request->month);
+            $allTransactions = $allTransactions->filter(function ($trx) use ($request) {
+                return date('n', strtotime($trx->date)) == $request->month;
+            })->values();
         }
 
-        return $query->paginate(5);
+        // Step 5: Manually paginate the in-memory collection
+        $perPage = 5;
+        $currentPage = $request->input('page', 1);
+        $total = $allTransactions->count();
+        $items = $allTransactions->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'current_page' => (int) $currentPage,
+            'data' => $items,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => (int) ceil($total / $perPage),
+            'from' => $total > 0 ? ($currentPage - 1) * $perPage + 1 : null,
+            'to' => $total > 0 ? min($currentPage * $perPage, $total) : null,
+        ]);
     }
 
     #[OA\Post(
