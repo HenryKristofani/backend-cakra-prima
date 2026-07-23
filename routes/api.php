@@ -12,3 +12,4 @@ Route::get('/user', function (Request $request) {
 Route::apiResource('transactions', TransactionController::class);
 
 Route::get('transactions-summary', [TransactionController::class, 'summary']);
+Route::get('transactions-export', [TransactionController::class, 'exportExcel']);

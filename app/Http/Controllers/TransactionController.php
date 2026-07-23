@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TransactionExport;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use OpenApi\Attributes as OA;
 
 class TransactionController extends Controller
@@ -185,4 +188,47 @@ class TransactionController extends Controller
                 'total_saldo_cash' => (float) $result->cash_income - (float) $result->cash_expense,
             ]);
         }
+
+    public function exportExcel(Request $request)
+    {
+        // Fetch ALL rows ascending for accurate running balance
+        $allTransactions = Transaction::query()
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Apply year/month filter
+        if ($request->filled('year')) {
+            $allTransactions = $allTransactions->filter(fn($t) =>
+                Carbon::parse($t->date)->year == $request->year
+            )->values();
+        }
+        if ($request->filled('month')) {
+            $allTransactions = $allTransactions->filter(fn($t) =>
+                Carbon::parse($t->date)->month == $request->month
+            )->values();
+        }
+
+        // Build period label
+        if ($request->filled('year') && $request->filled('month')) {
+            $start = Carbon::create($request->year, $request->month, 1);
+            $end = $start->copy()->endOfMonth();
+            $periodLabel = $start->translatedFormat('d F Y') . ' - ' . $end->translatedFormat('d F Y');
+        } elseif ($request->filled('year')) {
+            $periodLabel = '01 Januari ' . $request->year . ' - 31 Desember ' . $request->year;
+        } else {
+            $periodLabel = '01 Januari ' . now()->year . ' - 31 Desember ' . now()->year;
+        }
+
+        // Use UPPERCASE month names in Indonesian
+        $periodLabel = strtoupper($periodLabel);
+
+        $klasifikasi = $request->input('klasifikasi', 'SEMUA');
+        $filename = 'laporan-arus-kas-' . now()->format('Ymd-His') . '.xlsx';
+
+        return Excel::download(
+            new TransactionExport($allTransactions, $periodLabel, $klasifikasi),
+            $filename
+        );
+    }
 }
