@@ -376,6 +376,170 @@
                 }
             }
         },
+        "/api/debt-groups/{debtGroup}/items/bulk": {
+            "put": {
+                "tags": [
+                    "Debt Items"
+                ],
+                "summary": "Bulk Update Item Hutang",
+                "operationId": "2219d23adf8d9ca0888f798576b42780",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "no": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Beli material updated"
+                                                },
+                                                "trans_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-07-23"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 150000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "3 item berhasil diperbarui."
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 3
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Debt Items"
+                ],
+                "summary": "Bulk Insert Item Hutang",
+                "operationId": "8f6a8f3cfd374814968424c9327224b0",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "no": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Beli material"
+                                                },
+                                                "trans_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-07-23"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 150000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "3 item berhasil ditambahkan."
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 3
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/debt-groups/{debtGroup}/items/{debtItem}": {
             "put": {
                 "tags": [
@@ -559,6 +723,162 @@
                                         },
                                         "data": {
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{debtGroup}/payments/bulk": {
+            "put": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Bulk Update Pembayaran Hutang",
+                "operationId": "f6e69f89b0269b2d551f186285b2e116",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payments"
+                                ],
+                                "properties": {
+                                    "payments": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Cicil bayar updated"
+                                                },
+                                                "payment_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-07-23"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 500000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "2 pembayaran berhasil diperbarui."
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 2
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Bulk Insert Pembayaran Hutang",
+                "operationId": "8806f77624f698dc71dda10517f8ebcb",
+                "parameters": [
+                    {
+                        "name": "debtGroup",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payments"
+                                ],
+                                "properties": {
+                                    "payments": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Cicil bayar"
+                                                },
+                                                "payment_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-07-23"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 500000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "2 pembayaran berhasil ditambahkan."
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 2
                                         }
                                     },
                                     "type": "object"
