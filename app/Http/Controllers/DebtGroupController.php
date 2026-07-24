@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DebtGroup;
 use App\Exports\DebtGroupExport;
+use App\Imports\DebtGroupImport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -228,5 +229,41 @@ class DebtGroupController extends Controller
         $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', $debtGroup->name) . '.xlsx';
 
         return Excel::download(new DebtGroupExport($debtGroup), $filename);
+    }
+
+    #[OA\Post(
+        path: "/api/debt-groups/{id}/import",
+        summary: "Import Debt Group dari CSV/Excel",
+        tags: ["Debt Groups"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    required: ["file"],
+                    properties: [
+                        new OA\Property(property: "file", type: "string", format: "binary")
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Berhasil diimport")
+        ]
+    )]
+    public function import(Request $request, DebtGroup $debtGroup): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt,xlsx,xls|max:5120',
+        ]);
+
+        Excel::import(new DebtGroupImport($debtGroup), $request->file('file'));
+
+        return response()->json([
+            'message' => 'Data berhasil diimport.'
+        ]);
     }
 }
