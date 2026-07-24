@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\DebtGroup;
+use App\Exports\DebtGroupExport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use OpenApi\Attributes as OA;
 
 class DebtGroupController extends Controller
@@ -206,5 +208,25 @@ class DebtGroupController extends Controller
         return response()->json([
             'message' => 'Grup hutang berhasil dihapus.'
         ]);
+    }
+
+    #[OA\Get(
+        path: "/api/debt-groups/{id}/export",
+        summary: "Export Debt Group ke Excel",
+        tags: ["Debt Groups"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "File Excel (.xlsx)")
+        ]
+    )]
+    public function export(DebtGroup $debtGroup)
+    {
+        $debtGroup->load(['items' => fn ($q) => $q->orderBy('no'), 'payments']);
+
+        $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', $debtGroup->name) . '.xlsx';
+
+        return Excel::download(new DebtGroupExport($debtGroup), $filename);
     }
 }

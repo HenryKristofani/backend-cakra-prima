@@ -26,6 +26,7 @@ Route::get('transactions-summary', [TransactionController::class, 'summary']);
 Route::get('transactions-export', [TransactionController::class, 'exportExcel']);
 
 Route::resource('debt-groups', DebtGroupController::class);
+Route::get('debt-groups/{debtGroup}/export', [DebtGroupController::class, 'export'])->name('debt-groups.export');
  
 Route::prefix('debt-groups/{debtGroup}')->group(function () {
     Route::get('items/create', [DebtItemController::class, 'create'])->name('debt-items.create');
