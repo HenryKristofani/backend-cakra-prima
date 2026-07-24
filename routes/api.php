@@ -6,22 +6,19 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DebtGroupController;
 use App\Http\Controllers\DebtItemController;
 use App\Http\Controllers\DebtPaymentController;
+use App\Http\Controllers\ProjectController;
 
-use App\Models\Project;
 use App\Models\Account;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/projects', function () {
-    return Project::orderBy('name')->get();
-});
-
 Route::get('/accounts', function () {
     return Account::orderBy('name')->get();
 });
 
+Route::apiResource('projects', ProjectController::class);
 Route::apiResource('transactions', TransactionController::class);
 
 Route::get('transactions-summary', [TransactionController::class, 'summary']);
