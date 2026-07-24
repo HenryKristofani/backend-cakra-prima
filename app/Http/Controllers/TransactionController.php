@@ -22,7 +22,7 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         // Step 1: Fetch ALL rows ascending to calculate accurate running balance
-        $allTransactions = Transaction::query()
+        $allTransactions = Transaction::with(['project', 'account', 'user'])
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
@@ -92,14 +92,18 @@ class TransactionController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'company' => 'required|string',
+            'account_id' => 'nullable|exists:accounts,id',
+            'project_id' => 'nullable|exists:projects,id',
+            'user_id' => 'nullable|exists:users,id',
+            'company' => 'nullable|string',
             'description' => 'required|string',
             'payment_method' => 'required|in:cash,rek',
             'income' => 'nullable|numeric',
             'expense' => 'nullable|numeric',
         ]);
 
-        return Transaction::create($validated);
+        $trx = Transaction::create($validated);
+        return $trx->load(['project', 'account', 'user']);
     }
 
     #[OA\Put(
@@ -130,7 +134,10 @@ class TransactionController extends Controller
     {
         $validated = $request->validate([
             'date' => 'sometimes|date',
-            'company' => 'sometimes|string',
+            'account_id' => 'nullable|exists:accounts,id',
+            'project_id' => 'nullable|exists:projects,id',
+            'user_id' => 'nullable|exists:users,id',
+            'company' => 'nullable|string',
             'description' => 'sometimes|string',
             'payment_method' => 'sometimes|in:cash,rek',
             'income' => 'nullable|numeric',
@@ -138,7 +145,7 @@ class TransactionController extends Controller
         ]);
 
         $transaction->update($validated);
-        return $transaction;
+        return $transaction->load(['project', 'account', 'user']);
     }
 
     #[OA\Delete(
