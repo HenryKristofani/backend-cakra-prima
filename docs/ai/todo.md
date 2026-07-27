@@ -71,26 +71,26 @@ sebelum masuk ke logic aplikasi.
 Tujuan: setiap tabel punya Eloquent model dengan `$fillable`, `$casts`,
 dan relasi yang benar.
 
-- [ ] `Account` — `hasMany(Transaction)`, accessor `current_balance`
+- [x] `Account` — `hasMany(Transaction)`, accessor `current_balance`
       (`initial_balance + SUM(income) - SUM(expense)`)
-- [ ] `Project` — `hasMany(Transaction)`, scope `active()`
-- [ ] `Transaction` — `belongsTo(Account)`, `belongsTo(Project)`,
+- [x] `Project` — `hasMany(Transaction)`, scope `active()`
+- [x] `Transaction` — `belongsTo(Account)`, `belongsTo(Project)`,
       `belongsTo(User)`
-- [ ] `Debt` — `belongsTo(User)`, accessor `remaining_amount`
+- [x] `Debt` — `belongsTo(User)`, accessor `remaining_amount`
       (`amount - paid_amount`)
-- [ ] `Installment` — `belongsTo(User)`
-- [ ] `CashAdvance` — `belongsTo(User)`
-- [ ] `Potential` — `belongsTo(User)`
-- [ ] `DebtGroup` — `hasMany(DebtItem)`, `hasMany(DebtPayment)`, method
+- [x] `Installment` — `belongsTo(User)`
+- [x] `CashAdvance` — `belongsTo(User)`
+- [x] `Potential` — `belongsTo(User)`
+- [x] `DebtGroup` — `hasMany(DebtItem)`, `hasMany(DebtPayment)`, method
       `recalculate()` yang hitung ulang `total_amount` &
       `remaining_amount` setiap kali item/payment berubah
-- [ ] `DebtItem` — `belongsTo(DebtGroup)`
-- [ ] `DebtPayment` — `belongsTo(DebtGroup)`
-- [ ] `CashFlowPeriod` — `hasMany(OperationalCashFlowItem)`,
+- [x] `DebtItem` — `belongsTo(DebtGroup)`
+- [x] `DebtPayment` — `belongsTo(DebtGroup)`
+- [x] `CashFlowPeriod` — `hasMany(OperationalCashFlowItem)`,
       `hasMany(CashFlowTransaction)`, `hasMany(BudgetNeed)`
-- [ ] `OperationalCashFlowItem` — `belongsTo(CashFlowPeriod)`
-- [ ] `CashFlowTransaction` — `belongsTo(CashFlowPeriod)`
-- [ ] `BudgetNeed` (baru) — `belongsTo(CashFlowPeriod)`
+- [x] `OperationalCashFlowItem` — `belongsTo(CashFlowPeriod)`
+- [x] `CashFlowTransaction` — `belongsTo(CashFlowPeriod)`
+- [x] `BudgetNeed` (baru) — `belongsTo(CashFlowPeriod)`
 
 ---
 

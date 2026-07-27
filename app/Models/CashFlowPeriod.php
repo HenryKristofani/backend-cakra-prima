@@ -28,4 +28,9 @@ class CashFlowPeriod extends Model
     {
         return $this->hasMany(CashFlowTransaction::class, 'period_id');
     }
+
+    public function budgetNeeds(): HasMany
+    {
+        return $this->hasMany(BudgetNeed::class, 'period_id');
+    }
 }
