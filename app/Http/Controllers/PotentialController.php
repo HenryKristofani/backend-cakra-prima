@@ -16,9 +16,13 @@ class PotentialController extends Controller
             new OA\Response(response: 200, description: "Berhasil")
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
-        $potentials = Potential::with('user')->orderBy('trans_date', 'desc')->get();
+        $potentials = Potential::with('user')
+            ->when($request->year, fn($q) => $q->whereYear('trans_date', $request->year))
+            ->when($request->month, fn($q) => $q->whereMonth('trans_date', $request->month))
+            ->orderBy('trans_date', 'desc')
+            ->get();
         return response()->json($potentials);
     }
 

@@ -16,9 +16,13 @@ class InstallmentController extends Controller
             new OA\Response(response: 200, description: "Berhasil")
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
-        $installments = Installment::with('user')->orderBy('due_date', 'asc')->get();
+        $installments = Installment::with('user')
+            ->when($request->year, fn($q) => $q->whereYear('due_date', $request->year))
+            ->when($request->month, fn($q) => $q->whereMonth('due_date', $request->month))
+            ->orderBy('due_date', 'asc')
+            ->get();
         return response()->json($installments);
     }
 

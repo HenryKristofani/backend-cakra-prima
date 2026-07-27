@@ -16,9 +16,13 @@ class CashAdvanceController extends Controller
             new OA\Response(response: 200, description: "Berhasil")
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
-        $advances = CashAdvance::with('user')->orderBy('date_given', 'desc')->get();
+        $advances = CashAdvance::with('user')
+            ->when($request->year, fn($q) => $q->whereYear('date_given', $request->year))
+            ->when($request->month, fn($q) => $q->whereMonth('date_given', $request->month))
+            ->orderBy('date_given', 'desc')
+            ->get();
         return response()->json($advances);
     }
 

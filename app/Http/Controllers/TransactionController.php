@@ -173,19 +173,20 @@ class TransactionController extends Controller
             new OA\Response(response: 200, description: "Berhasil")
         ]
     )]
-        public function summary()
-        {
-            $bulanIni = now();
+    public function summary(Request $request)
+    {
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
 
-            $result = Transaction::selectRaw("
-                SUM(income) as total_income,
-                SUM(expense) as total_expense,
-                SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN income ELSE 0 END) as pemasukan_bulan_ini,
-                SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN expense ELSE 0 END) as pengeluaran_bulan_ini,
-                SUM(CASE WHEN payment_method = 'cash' THEN income ELSE 0 END) as cash_income,
-                SUM(CASE WHEN payment_method = 'cash' THEN expense ELSE 0 END) as cash_expense
-            ", [$bulanIni->month, $bulanIni->year, $bulanIni->month, $bulanIni->year])
-            ->first();
+        $result = Transaction::selectRaw("
+            SUM(income) as total_income,
+            SUM(expense) as total_expense,
+            SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN income ELSE 0 END) as pemasukan_bulan_ini,
+            SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN expense ELSE 0 END) as pengeluaran_bulan_ini,
+            SUM(CASE WHEN payment_method = 'cash' THEN income ELSE 0 END) as cash_income,
+            SUM(CASE WHEN payment_method = 'cash' THEN expense ELSE 0 END) as cash_expense
+        ", [$month, $year, $month, $year])
+        ->first();
 
             return response()->json([
                 'total_saldo_kas' => (float) $result->total_income - (float) $result->total_expense,
