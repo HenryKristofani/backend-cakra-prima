@@ -7,19 +7,27 @@ use App\Http\Controllers\DebtGroupController;
 use App\Http\Controllers\DebtItemController;
 use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\ProjectController;
-
-use App\Models\Account;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\DebtController;
+use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\CashAdvanceController;
+use App\Http\Controllers\PotentialController;
+use App\Http\Controllers\CashFlowPeriodController;
+use App\Http\Controllers\OperationalCashFlowItemController;
+use App\Http\Controllers\CashFlowTransactionController;
+use App\Http\Controllers\BudgetNeedController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/accounts', function () {
-    return Account::orderBy('name')->get();
-});
-
+Route::apiResource('accounts', AccountController::class);
 Route::apiResource('projects', ProjectController::class);
 Route::apiResource('transactions', TransactionController::class);
+Route::apiResource('debts', DebtController::class);
+Route::apiResource('installments', InstallmentController::class);
+Route::apiResource('cash-advances', CashAdvanceController::class);
+Route::apiResource('potentials', PotentialController::class);
 
 Route::get('transactions-summary', [TransactionController::class, 'summary']);
 
@@ -45,4 +53,19 @@ Route::prefix('debt-groups/{debtGroup}')->group(function () {
     Route::get('payments/{debtPayment}/edit', [DebtPaymentController::class, 'edit'])->name('debt-payments.edit');
     Route::put('payments/{debtPayment}', [DebtPaymentController::class, 'update'])->name('debt-payments.update');
     Route::delete('payments/{debtPayment}', [DebtPaymentController::class, 'destroy'])->name('debt-payments.destroy');
+});
+
+Route::apiResource('cash-flow-periods', CashFlowPeriodController::class);
+Route::prefix('cash-flow-periods/{cashFlowPeriod}')->group(function () {
+    Route::post('items', [OperationalCashFlowItemController::class, 'store']);
+    Route::put('items/{item}', [OperationalCashFlowItemController::class, 'update']);
+    Route::delete('items/{item}', [OperationalCashFlowItemController::class, 'destroy']);
+    
+    Route::post('transactions', [CashFlowTransactionController::class, 'store']);
+    Route::put('transactions/{transaction}', [CashFlowTransactionController::class, 'update']);
+    Route::delete('transactions/{transaction}', [CashFlowTransactionController::class, 'destroy']);
+    
+    Route::post('budget-needs', [BudgetNeedController::class, 'store']);
+    Route::put('budget-needs/{budgetNeed}', [BudgetNeedController::class, 'update']);
+    Route::delete('budget-needs/{budgetNeed}', [BudgetNeedController::class, 'destroy']);
 });

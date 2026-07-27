@@ -6,6 +6,928 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/accounts": {
+            "get": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Daftar Akun Kas",
+                "operationId": "13efa5706d1fae14fc1cf87c9f6b1427",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Tambah Akun Kas",
+                "operationId": "e974666bc6c050296a8ee09a3ab6533f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "BCA"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "rek"
+                                    },
+                                    "initial_balance": {
+                                        "type": "number",
+                                        "example": 1000000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/accounts/{id}": {
+            "get": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Detail Akun Kas",
+                "operationId": "552b29d7944dfff7a0c49abc83f44ea5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Update Akun Kas",
+                "operationId": "9be8085be375b01725706b78df130bca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "initial_balance": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Hapus Akun Kas",
+                "operationId": "102c60c5fd1e94be8c71c4efbeb51bf8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/budget-needs": {
+            "post": {
+                "tags": [
+                    "Budget Needs"
+                ],
+                "summary": "Tambah Kebutuhan Anggaran",
+                "operationId": "91d19339fcf0d082a763888e93ef2f53",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Tagihan Listrik"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 500000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/budget-needs/{budgetNeed}": {
+            "put": {
+                "tags": [
+                    "Budget Needs"
+                ],
+                "summary": "Update Kebutuhan Anggaran",
+                "operationId": "05bde28a826016bb523bc25bab3eacc9",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "budgetNeed",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Budget Needs"
+                ],
+                "summary": "Hapus Kebutuhan Anggaran",
+                "operationId": "34b5dd0823a43b04b8668634fd72e348",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "budgetNeed",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/cash-advances": {
+            "get": {
+                "tags": [
+                    "Cash Advances"
+                ],
+                "summary": "Daftar Dana Talangan",
+                "operationId": "4d69ecf8f1985418fff2a7d051bb3ee5",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cash Advances"
+                ],
+                "summary": "Tambah Dana Talangan",
+                "operationId": "e44c4b2b065aebc6dfc44eb15d84d290",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "recipient",
+                                    "description",
+                                    "amount",
+                                    "date_given",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "recipient": {
+                                        "type": "string",
+                                        "example": "Pak Budi"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Beli material"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 1000000
+                                    },
+                                    "date_given": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-27"
+                                    },
+                                    "date_returned": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": null
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "belum lunas"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/cash-advances/{id}": {
+            "get": {
+                "tags": [
+                    "Cash Advances"
+                ],
+                "summary": "Detail Dana Talangan",
+                "operationId": "4f99eff79e1e3516cf30c220791f4ba4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Cash Advances"
+                ],
+                "summary": "Update Dana Talangan",
+                "operationId": "e816f9a0061b7a1b3de8d4fb830feb9d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "recipient": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "date_given": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "date_returned": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cash Advances"
+                ],
+                "summary": "Hapus Dana Talangan",
+                "operationId": "4e6d85533c502806eb0f465a96ea2c16",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods": {
+            "get": {
+                "tags": [
+                    "Cash Flow Periods"
+                ],
+                "summary": "Daftar Periode Arus Kas",
+                "operationId": "c8c94ba364601e63a09321c01c313423",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cash Flow Periods"
+                ],
+                "summary": "Tambah Periode Arus Kas",
+                "operationId": "360867363337415463b384d54ac91496",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "period_label"
+                                ],
+                                "properties": {
+                                    "period_label": {
+                                        "type": "string",
+                                        "example": "Juli 2026"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-01"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-31"
+                                    },
+                                    "classification": {
+                                        "type": "string",
+                                        "example": "SEMUA"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{id}": {
+            "get": {
+                "tags": [
+                    "Cash Flow Periods"
+                ],
+                "summary": "Detail Periode Arus Kas",
+                "operationId": "58c4541844455e4411a5256112111709",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Cash Flow Periods"
+                ],
+                "summary": "Update Periode Arus Kas",
+                "operationId": "78a19c1dae12beb563460a2ec5d8c10e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "period_label": {
+                                        "type": "string"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "classification": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cash Flow Periods"
+                ],
+                "summary": "Hapus Periode Arus Kas",
+                "operationId": "c1d7d8225fa3eb5d32a5bff608fcfb7e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/transactions": {
+            "post": {
+                "tags": [
+                    "Cash Flow Transactions"
+                ],
+                "summary": "Tambah Transaksi Arus Kas",
+                "operationId": "8502b01edcf1bba66939342616341a02",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "trans_date",
+                                    "description",
+                                    "source"
+                                ],
+                                "properties": {
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-05"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Pembelian ATK"
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "example": "CASH"
+                                    },
+                                    "out_amount": {
+                                        "type": "number",
+                                        "example": 50000
+                                    },
+                                    "in_amount": {
+                                        "type": "number",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/transactions/{transaction}": {
+            "put": {
+                "tags": [
+                    "Cash Flow Transactions"
+                ],
+                "summary": "Update Transaksi Arus Kas",
+                "operationId": "197823bae95c33d5a04358da1c84a7f9",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "transaction",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "source": {
+                                        "type": "string"
+                                    },
+                                    "out_amount": {
+                                        "type": "number"
+                                    },
+                                    "in_amount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cash Flow Transactions"
+                ],
+                "summary": "Hapus Transaksi Arus Kas",
+                "operationId": "9f5e8daf91ddeea4e23b7640c1cb7496",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "transaction",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/debts": {
+            "get": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Daftar Hutang Piutang",
+                "operationId": "347c69ab1e5592b389254d9bd10b6ad9",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Tambah Hutang Piutang",
+                "operationId": "6602577612cef1d0ecc2a08c6d6bcd6a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "person_name",
+                                    "amount",
+                                    "status",
+                                    "trans_date"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "person_name": {
+                                        "type": "string",
+                                        "example": "Mas Ryan"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 5000000
+                                    },
+                                    "paid_amount": {
+                                        "type": "number",
+                                        "example": 0
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "belum lunas"
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-27"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/debts/{id}": {
+            "get": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Detail Hutang Piutang",
+                "operationId": "af50ce7e611e06a5f0886b246e87f247",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Update Hutang Piutang",
+                "operationId": "8a524a80413a48645f8cea4bdbae5c64",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "person_name": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "paid_amount": {
+                                        "type": "number"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Hapus Hutang Piutang",
+                "operationId": "efda5885b17af25d67d337373236aeec",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
         "/api/debt-groups": {
             "get": {
                 "tags": [
@@ -299,6 +1221,73 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{id}/export": {
+            "get": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Export Debt Group ke Excel",
+                "operationId": "0eb6237531e9c1f7f22db8688e5dcb93",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File Excel (.xlsx)"
+                    }
+                }
+            }
+        },
+        "/api/debt-groups/{id}/import": {
+            "post": {
+                "tags": [
+                    "Debt Groups"
+                ],
+                "summary": "Import Debt Group dari CSV/Excel",
+                "operationId": "2884529d743db88c1443acb33bb540b4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diimport"
                     }
                 }
             }
@@ -1009,6 +1998,479 @@
                 }
             }
         },
+        "/api/installments": {
+            "get": {
+                "tags": [
+                    "Installments"
+                ],
+                "summary": "Daftar Angsuran",
+                "operationId": "d4a30624748baa7766861b1adcf284b3",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Installments"
+                ],
+                "summary": "Tambah Angsuran",
+                "operationId": "3b9440ec0aa3cdc57165717eb699ae3b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category",
+                                    "due_date",
+                                    "amount",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "BPJS"
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-31"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 150000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "belum dibayar"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/installments/{id}": {
+            "get": {
+                "tags": [
+                    "Installments"
+                ],
+                "summary": "Detail Angsuran",
+                "operationId": "059a3086c06cdc9837ea0c82516347b4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Installments"
+                ],
+                "summary": "Update Angsuran",
+                "operationId": "7057368f4c5abd2d496a7df30cce2d71",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "category": {
+                                        "type": "string"
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Installments"
+                ],
+                "summary": "Hapus Angsuran",
+                "operationId": "640c04408805f01ce6ac95c9f220822d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/items": {
+            "post": {
+                "tags": [
+                    "Cash Flow Items"
+                ],
+                "summary": "Tambah Item Arus Kas Operasional",
+                "operationId": "776bca55450111ac6fdc5be75cc81f7c",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "section",
+                                    "label",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "section": {
+                                        "type": "string",
+                                        "example": "modal_awal"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "A"
+                                    },
+                                    "label": {
+                                        "type": "string",
+                                        "example": "Modal Awal"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 10000000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/cash-flow-periods/{period}/items/{item}": {
+            "put": {
+                "tags": [
+                    "Cash Flow Items"
+                ],
+                "summary": "Update Item Arus Kas Operasional",
+                "operationId": "51c7ecd64bd473f8bf933615784d4565",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "section": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cash Flow Items"
+                ],
+                "summary": "Hapus Item Arus Kas Operasional",
+                "operationId": "1459eabeaf3f7709a91bf12ab3bfdf8d",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/potentials": {
+            "get": {
+                "tags": [
+                    "Potentials"
+                ],
+                "summary": "Daftar Potensi",
+                "operationId": "8de71b1322aa87e802bc38e3dfc4188b",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Potentials"
+                ],
+                "summary": "Tambah Potensi",
+                "operationId": "687d888aee82d9932fb6d402cbb327ee",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category",
+                                    "description",
+                                    "amount",
+                                    "trans_date",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Proyek A"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Potensi pendapatan bulan depan"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 5000000
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-27"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "pending"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/potentials/{id}": {
+            "get": {
+                "tags": [
+                    "Potentials"
+                ],
+                "summary": "Detail Potensi",
+                "operationId": "ac8476f64cf5d1fbd77acc770443679a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Potentials"
+                ],
+                "summary": "Update Potensi",
+                "operationId": "c33f86da4ed62f9d3754b66582c629ef",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "category": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "trans_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Potentials"
+                ],
+                "summary": "Hapus Potensi",
+                "operationId": "bcc7292352bfb9652c238dbe2dc9033a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
         "/api/projects": {
             "get": {
                 "tags": [
@@ -1456,6 +2918,30 @@
     },
     "tags": [
         {
+            "name": "Accounts",
+            "description": "Accounts"
+        },
+        {
+            "name": "Budget Needs",
+            "description": "Budget Needs"
+        },
+        {
+            "name": "Cash Advances",
+            "description": "Cash Advances"
+        },
+        {
+            "name": "Cash Flow Periods",
+            "description": "Cash Flow Periods"
+        },
+        {
+            "name": "Cash Flow Transactions",
+            "description": "Cash Flow Transactions"
+        },
+        {
+            "name": "Debts",
+            "description": "Debts"
+        },
+        {
             "name": "Debt Groups",
             "description": "Debt Groups"
         },
@@ -1466,6 +2952,18 @@
         {
             "name": "Debt Payments",
             "description": "Debt Payments"
+        },
+        {
+            "name": "Installments",
+            "description": "Installments"
+        },
+        {
+            "name": "Cash Flow Items",
+            "description": "Cash Flow Items"
+        },
+        {
+            "name": "Potentials",
+            "description": "Potentials"
         },
         {
             "name": "Projects",

@@ -101,24 +101,24 @@ semua modul. Semua controller pakai pola standar
 (`index/create/store/show/edit/update/destroy`), validasi di method
 `store`/`update`.
 
-- [ ] `AccountController`
-- [ ] `ProjectController`
-- [ ] `DebtController`
-- [ ] `InstallmentController`
-- [ ] `CashAdvanceController`
-- [ ] `PotentialController`
-- [ ] `DebtGroupController` + `DebtItemController` (nested) +
+- [x] `AccountController`
+- [x] `ProjectController`
+- [x] `DebtController`
+- [x] `InstallmentController`
+- [x] `CashAdvanceController`
+- [x] `PotentialController`
+- [x] `DebtGroupController` + `DebtItemController` (nested) +
       `DebtPaymentController` (nested) — setiap perubahan item/payment
       panggil `$debtGroup->recalculate()`
-- [ ] `CashFlowPeriodController` + `OperationalCashFlowItemController`
+- [x] `CashFlowPeriodController` + `OperationalCashFlowItemController`
       (nested) + `CashFlowTransactionController` (nested)
-- [ ] `BudgetNeedController` (baru, nested di bawah `CashFlowPeriod`)
-- [ ] `TransactionController` — form input transaksi kas harian, field
+- [x] `BudgetNeedController` (baru, nested di bawah `CashFlowPeriod`)
+- [x] `TransactionController` — form input transaksi kas harian, field
       `project` berupa **dropdown** dari `Project::active()`, bukan
       input teks bebas
 
 ### Routes
-- [ ] Tambahkan semua route resource + nested route ke `routes/web.php`
+- [x] Tambahkan semua route resource + nested route ke `routes/web.php`
       (atau `routes/api.php` kalau backend murni API untuk Next.js)
 
 ---
