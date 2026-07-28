@@ -13,8 +13,17 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Some database drivers (SQLite in-memory used by tests) do not
+        // support dropping columns via ALTER TABLE. Skip the drop when
+        // running on SQLite to keep tests fast and avoid errors.
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn('company');
+            if (Schema::hasColumn('transactions', 'company')) {
+                $table->dropColumn('company');
+            }
         });
     }
 

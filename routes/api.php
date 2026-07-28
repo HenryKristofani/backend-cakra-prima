@@ -23,6 +23,7 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('accounts', AccountController::class);
 Route::apiResource('projects', ProjectController::class);
+Route::get('projects/{project}/rab-summary', [App\Http\Controllers\ProjectRabSummaryController::class, '__invoke']);
 Route::post('projects/{project}/transactions', [TransactionController::class, 'storeNested']);
 Route::apiResource('transactions', TransactionController::class);
 Route::apiResource('debts', DebtController::class);
@@ -69,4 +70,20 @@ Route::prefix('cash-flow-periods/{cashFlowPeriod}')->group(function () {
     Route::post('budget-needs', [BudgetNeedController::class, 'store']);
     Route::put('budget-needs/{budgetNeed}', [BudgetNeedController::class, 'update']);
     Route::delete('budget-needs/{budgetNeed}', [BudgetNeedController::class, 'destroy']);
+});
+
+// RAB module routes (Phase 3)
+use App\Http\Controllers\RabCategoryController;
+use App\Http\Controllers\RabItemController;
+use App\Http\Controllers\ProgressReportController;
+
+Route::apiResource('projects.rab-categories', RabCategoryController::class)->shallow();
+
+Route::prefix('rab-categories/{rabCategory}')->group(function () {
+    Route::apiResource('items', RabItemController::class);
+});
+
+Route::prefix('rab-categories/{rabCategory}/items/{rabItem}')->group(function () {
+    Route::get('progress-reports', [ProgressReportController::class, 'index']);
+    Route::post('progress-reports', [ProgressReportController::class, 'store']);
 });
