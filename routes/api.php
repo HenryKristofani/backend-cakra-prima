@@ -23,6 +23,7 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('accounts', AccountController::class);
 Route::apiResource('projects', ProjectController::class);
+Route::post('projects/{project}/transactions', [TransactionController::class, 'storeNested']);
 Route::apiResource('transactions', TransactionController::class);
 Route::apiResource('debts', DebtController::class);
 Route::apiResource('installments', InstallmentController::class);

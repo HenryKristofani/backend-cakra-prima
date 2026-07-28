@@ -48,6 +48,11 @@ class TransactionController extends Controller
                 return date('n', strtotime($trx->date)) == $request->month;
             })->values();
         }
+        if ($request->filled('project_id')) {
+            $allTransactions = $allTransactions->filter(function ($trx) use ($request) {
+                return $trx->project_id == $request->project_id;
+            })->values();
+        }
 
         // Step 5: Manually paginate the in-memory collection
         $perPage = 5;
@@ -64,6 +69,33 @@ class TransactionController extends Controller
             'from' => $total > 0 ? ($currentPage - 1) * $perPage + 1 : null,
             'to' => $total > 0 ? min($currentPage * $perPage, $total) : null,
         ]);
+    }
+
+    #[OA\Post(
+        path: "/api/projects/{project}/transactions",
+        summary: "Tambah transaksi nested untuk project",
+        tags: ["Transactions"],
+        responses: [
+            new OA\Response(response: 201, description: "Berhasil dibuat")
+        ]
+    )]
+    public function storeNested(Request $request, \App\Models\Project $project)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'account_id' => 'nullable|exists:accounts,id',
+            'user_id' => 'nullable|exists:users,id',
+            'company' => 'nullable|string',
+            'description' => 'required|string',
+            'payment_method' => 'required|in:cash,rek',
+            'income' => 'nullable|numeric',
+            'expense' => 'nullable|numeric',
+        ]);
+
+        $validated['project_id'] = $project->id;
+
+        $trx = Transaction::create($validated);
+        return $trx->load(['project', 'account', 'user']);
     }
 
     #[OA\Post(
@@ -177,8 +209,14 @@ class TransactionController extends Controller
     {
         $year = $request->input('year', now()->year);
         $month = $request->input('month', now()->month);
+        $projectId = $request->input('project_id');
 
-        $result = Transaction::selectRaw("
+        $query = Transaction::query();
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
+
+        $result = $query->selectRaw("
             SUM(income) as total_income,
             SUM(expense) as total_expense,
             SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN income ELSE 0 END) as pemasukan_bulan_ini,
