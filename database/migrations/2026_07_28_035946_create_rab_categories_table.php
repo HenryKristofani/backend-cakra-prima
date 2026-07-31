@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('project_id')
                   ->constrained('projects')
                   ->cascadeOnDelete();
+            $table->foreignId('parent_id')
+                  ->nullable()
+                  ->constrained('rab_categories')
+                  ->nullOnDelete();
             $table->string('code', 10)->nullable(); // e.g. "A", "B", "I", "II"
             $table->string('name');                 // e.g. "Pekerjaan Bongkaran"
             $table->integer('sort_order')->default(0);

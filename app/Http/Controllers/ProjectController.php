@@ -88,6 +88,8 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'status' => 'nullable|in:aktif,nonaktif',
+            'location' => 'nullable|string|max:255',
+            'rab_date' => 'nullable|date',
         ]);
 
         $project = Project::create([
@@ -162,6 +164,8 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'status' => 'sometimes|in:aktif,nonaktif',
+            'location' => 'nullable|string|max:255',
+            'rab_date' => 'nullable|date',
         ]);
 
         $project->update($validated);

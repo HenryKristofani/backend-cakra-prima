@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('unit_price', 20, 2);   // harga satuan (Rp)
             $table->integer('sort_order')->default(0);
             // total_price & bobot_percentage TIDAK disimpan — dihitung on-the-fly
-            $table->enum('status', ['aktif', 'dibatalkan'])->default('aktif');
+            $table->enum('status', ['aktif', 'dibatalkan', 'dikurangi'])->default('aktif');
             $table->timestamps();
         });
     }

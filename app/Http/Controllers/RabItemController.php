@@ -21,7 +21,7 @@ class RabItemController extends Controller
             'unit' => 'required|string',
             'unit_price' => 'required|numeric',
             'sort_order' => 'nullable|integer',
-            'status' => 'required|in:aktif,dibatalkan',
+            'status' => 'required|in:aktif,dibatalkan,dikurangi',
         ]);
 
         $validated['category_id'] = $rabCategory->id;
@@ -43,7 +43,7 @@ class RabItemController extends Controller
             'unit' => 'sometimes|string',
             'unit_price' => 'sometimes|numeric',
             'sort_order' => 'nullable|integer',
-            'status' => 'sometimes|in:aktif,dibatalkan',
+            'status' => 'sometimes|in:aktif,dibatalkan,dikurangi',
         ]);
 
         $item->update($validated);

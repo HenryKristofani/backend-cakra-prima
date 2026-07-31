@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // mis. LPSE, Jomboran, Kreasi Muda, PMO
             $table->string('status')->default('aktif'); // aktif | nonaktif
+            $table->string('location')->nullable();
+            $table->date('rab_date')->nullable();
             $table->timestamps();
         });
     }

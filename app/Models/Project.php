@@ -11,6 +11,12 @@ class Project extends Model
     protected $fillable = [
         'name',
         'status',
+        'location',
+        'rab_date',
+    ];
+
+    protected $casts = [
+        'rab_date' => 'date',
     ];
 
     public function transactions(): HasMany

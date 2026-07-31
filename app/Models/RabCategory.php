@@ -10,6 +10,7 @@ class RabCategory extends Model
 {
     protected $fillable = [
         'project_id',
+        'parent_id',
         'code',
         'name',
         'sort_order',
@@ -18,6 +19,16 @@ class RabCategory extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function items(): HasMany
