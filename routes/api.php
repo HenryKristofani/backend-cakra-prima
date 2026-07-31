@@ -22,6 +22,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::apiResource('accounts', AccountController::class);
+Route::put('projects/bulk', [ProjectController::class, 'bulkUpdate']);
 Route::apiResource('projects', ProjectController::class);
 Route::get('projects/{project}/rab-summary', [App\Http\Controllers\ProjectRabSummaryController::class, '__invoke']);
 Route::post('projects/{project}/transactions', [TransactionController::class, 'storeNested']);

@@ -95,6 +95,8 @@ class ProjectController extends Controller
         $project = Project::create([
             'name' => $validated['name'],
             'status' => $validated['status'] ?? 'aktif',
+            'location' => $validated['location'] ?? null,
+            'rab_date' => $validated['rab_date'] ?? null,
         ]);
 
         return response()->json($project, 201);
@@ -171,6 +173,27 @@ class ProjectController extends Controller
         $project->update($validated);
 
         return response()->json($project);
+    }
+
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'projects' => 'required|array|min:1',
+            'projects.*.id' => 'required|integer|distinct|exists:projects,id',
+            'projects.*.name' => 'sometimes|string|max:255',
+            'projects.*.status' => 'sometimes|in:aktif,nonaktif',
+            'projects.*.location' => 'nullable|string|max:255',
+            'projects.*.rab_date' => 'nullable|date',
+        ]);
+
+        $updatedProjects = [];
+        foreach ($validated['projects'] as $projectData) {
+            $project = Project::findOrFail($projectData['id']);
+            $project->update(array_filter($projectData, fn ($value, $key) => $key !== 'id', ARRAY_FILTER_USE_BOTH));
+            $updatedProjects[] = $project;
+        }
+
+        return response()->json($updatedProjects);
     }
 
     #[OA\Delete(
