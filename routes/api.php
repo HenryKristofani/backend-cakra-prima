@@ -80,6 +80,10 @@ use App\Http\Controllers\ProgressReportController;
 
 Route::apiResource('projects.rab-categories', RabCategoryController::class)->shallow();
 
+// Project-scoped cash advances
+Route::get('projects/{project}/cash-advances', [\App\Http\Controllers\CashAdvanceController::class, 'indexForProject']);
+Route::post('projects/{project}/cash-advances', [\App\Http\Controllers\CashAdvanceController::class, 'storeForProject']);
+
 Route::prefix('rab-categories/{rabCategory}')->group(function () {
     Route::apiResource('items', RabItemController::class);
 });

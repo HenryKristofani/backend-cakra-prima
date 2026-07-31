@@ -66,6 +66,39 @@ class CashAdvanceController extends Controller
         return response()->json($advance, 201);
     }
 
+    // Project-scoped index
+    public function indexForProject(Request $request, \App\Models\Project $project)
+    {
+        $advances = CashAdvance::with('user')
+            ->where('project_id', $project->id)
+            ->when($request->year, fn($q) => $q->whereYear('date_given', $request->year))
+            ->when($request->month, fn($q) => $q->whereMonth('date_given', $request->month))
+            ->orderBy('date_given', 'desc')
+            ->get();
+
+        return response()->json($advances);
+    }
+
+    // Project-scoped store: ensure advance is associated with the route project
+    public function storeForProject(Request $request, \App\Models\Project $project)
+    {
+        $validated = $request->validate([
+            'user_id' => 'nullable|exists:users,id',
+            'recipient' => 'required|string|max:255',
+            'description' => 'required|string',
+            'amount' => 'required|numeric',
+            'date_given' => 'required|date',
+            'date_returned' => 'nullable|date',
+            'status' => 'required|string|max:255'
+        ]);
+
+        $validated['project_id'] = $project->id;
+        $advance = CashAdvance::create($validated);
+        $advance->load('user');
+
+        return response()->json($advance, 201);
+    }
+
     #[OA\Get(
         path: "/api/cash-advances/{id}",
         summary: "Detail Dana Talangan",
