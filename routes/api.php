@@ -90,6 +90,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('projects/{project}/cash-advances', [\App\Http\Controllers\CashAdvanceController::class, 'storeForProject']);
     
     Route::prefix('rab-categories/{rabCategory}')->group(function () {
+        Route::post('items/bulk', [RabItemController::class, 'bulkStore'])->name('rab-items.bulk-store');
+        Route::put('items/bulk', [RabItemController::class, 'bulkUpdate'])->name('rab-items.bulk-update');
         Route::apiResource('items', RabItemController::class);
     });
     
