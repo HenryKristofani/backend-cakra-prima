@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RabCategory;
 use App\Models\RabItem;
 use App\Models\ProgressReport;
 use Illuminate\Http\Request;
 
 class ProgressReportController extends Controller
 {
-    public function index(RabItem $rabItem)
+    public function index(RabCategory $rabCategory, RabItem $rabItem)
     {
         return $rabItem->progressReports()->orderByDesc('report_date')->get();
     }
 
-    public function store(Request $request, RabItem $rabItem)
+    public function store(Request $request, RabCategory $rabCategory, RabItem $rabItem)
     {
         $validated = $request->validate([
             'report_date' => 'required|date',
