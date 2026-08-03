@@ -72,6 +72,8 @@ class ProjectRabSummaryController extends Controller
             }
 
             return [
+                'id' => $item->id,
+                'category_id' => $item->category_id,
                 'description' => $item->description,
                 'volume' => $item->volume,
                 'unit' => $item->unit,
@@ -98,6 +100,7 @@ class ProjectRabSummaryController extends Controller
         $totalProgress = $items->sum(fn ($item) => $item['total_percentage']) + $childProgress;
 
         return [
+            'id' => $category->id,
             'code' => $category->code,
             'name' => $category->name,
             'total_bobot_percentage' => round($totalBobot, 2),
