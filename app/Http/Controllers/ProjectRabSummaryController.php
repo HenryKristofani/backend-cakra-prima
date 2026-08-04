@@ -109,4 +109,16 @@ class ProjectRabSummaryController extends Controller
             'items' => $items,
         ];
     }
+    public function exportExcel(Project $project, Request $request)
+    {
+        $summaryResponse = $this->__invoke($project, $request);
+        $data = $summaryResponse->getData(true);
+        
+        $filename = 'RAB-' . \Illuminate\Support\Str::slug($project->name) . '-' . now()->format('Ymd') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ProjectRabExport($data, $project), 
+            $filename
+        );
+    }
 }
