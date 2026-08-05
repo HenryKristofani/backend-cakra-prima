@@ -22,7 +22,7 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         // Step 1: Fetch ALL rows ascending to calculate accurate running balance
-        $allTransactions = Transaction::with(['project', 'account', 'user'])
+        $allTransactions = Transaction::with(['project', 'account', 'user', 'rapItem:id,description'])
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
@@ -82,20 +82,21 @@ class TransactionController extends Controller
     public function storeNested(Request $request, \App\Models\Project $project)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'account_id' => 'nullable|exists:accounts,id',
-            'user_id' => 'nullable|exists:users,id',
-            'company' => 'nullable|string',
-            'description' => 'required|string',
-            'payment_method' => 'required|in:cash,rek',
-            'income' => 'nullable|numeric',
-            'expense' => 'nullable|numeric',
+            'date'          => 'required|date',
+            'account_id'    => 'nullable|exists:accounts,id',
+            'user_id'       => 'nullable|exists:users,id',
+            'rap_item_id'   => 'nullable|exists:rap_items,id',
+            'company'       => 'nullable|string',
+            'description'   => 'required|string',
+            'payment_method'=> 'required|in:cash,rek',
+            'income'        => 'nullable|numeric',
+            'expense'       => 'nullable|numeric',
         ]);
 
         $validated['project_id'] = $project->id;
 
         $trx = Transaction::create($validated);
-        return $trx->load(['project', 'account', 'user']);
+        return $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
     }
 
     #[OA\Post(
@@ -123,19 +124,20 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'account_id' => 'nullable|exists:accounts,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'user_id' => 'nullable|exists:users,id',
-            'company' => 'nullable|string',
-            'description' => 'required|string',
-            'payment_method' => 'required|in:cash,rek',
-            'income' => 'nullable|numeric',
-            'expense' => 'nullable|numeric',
+            'date'          => 'required|date',
+            'account_id'    => 'nullable|exists:accounts,id',
+            'project_id'    => 'nullable|exists:projects,id',
+            'user_id'       => 'nullable|exists:users,id',
+            'rap_item_id'   => 'nullable|exists:rap_items,id',
+            'company'       => 'nullable|string',
+            'description'   => 'required|string',
+            'payment_method'=> 'required|in:cash,rek',
+            'income'        => 'nullable|numeric',
+            'expense'       => 'nullable|numeric',
         ]);
 
         $trx = Transaction::create($validated);
-        return $trx->load(['project', 'account', 'user']);
+        return $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
     }
 
     #[OA\Put(
@@ -165,19 +167,20 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         $validated = $request->validate([
-            'date' => 'sometimes|date',
-            'account_id' => 'nullable|exists:accounts,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'user_id' => 'nullable|exists:users,id',
-            'company' => 'nullable|string',
-            'description' => 'sometimes|string',
-            'payment_method' => 'sometimes|in:cash,rek',
-            'income' => 'nullable|numeric',
-            'expense' => 'nullable|numeric',
+            'date'          => 'sometimes|date',
+            'account_id'    => 'nullable|exists:accounts,id',
+            'project_id'    => 'nullable|exists:projects,id',
+            'user_id'       => 'nullable|exists:users,id',
+            'rap_item_id'   => 'nullable|exists:rap_items,id',
+            'company'       => 'nullable|string',
+            'description'   => 'sometimes|string',
+            'payment_method'=> 'sometimes|in:cash,rek',
+            'income'        => 'nullable|numeric',
+            'expense'       => 'nullable|numeric',
         ]);
 
         $transaction->update($validated);
-        return $transaction->load(['project', 'account', 'user']);
+        return $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
     }
 
     #[OA\Delete(

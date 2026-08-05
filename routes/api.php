@@ -20,6 +20,10 @@ use App\Http\Controllers\BudgetNeedController;
 use App\Http\Controllers\RabCategoryController;
 use App\Http\Controllers\RabItemController;
 use App\Http\Controllers\ProgressReportController;
+use App\Http\Controllers\RapCategoryController;
+use App\Http\Controllers\RapItemController;
+use App\Http\Controllers\RapSettingController;
+use App\Http\Controllers\ProjectRapController;
 
 // Public routes
 Route::post('login', [AuthController::class, 'login']);
@@ -100,4 +104,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('progress-reports', [ProgressReportController::class, 'index']);
         Route::post('progress-reports', [ProgressReportController::class, 'store']);
     });
+
+    // ── RAP module routes ────────────────────────────────────────────────────────
+    Route::apiResource('projects.rap-categories', RapCategoryController::class)->shallow();
+
+    Route::prefix('rap-categories/{rapCategory}')->group(function () {
+        Route::post('items/bulk', [RapItemController::class, 'bulkStore'])->name('rap-items.bulk-store');
+        Route::put('items/bulk', [RapItemController::class, 'bulkUpdate'])->name('rap-items.bulk-update');
+        Route::apiResource('items', RapItemController::class);
+    });
+
+    // RAP project-level endpoints
+    Route::get('projects/{project}/rap-items',        [ProjectRapController::class, 'rapItems']);
+    Route::post('projects/{project}/rap/generate-from-rab', [ProjectRapController::class, 'generateFromRab']);
+    Route::get('projects/{project}/rap-setting',  [RapSettingController::class, 'show']);
+    Route::put('projects/{project}/rap-setting',  [RapSettingController::class, 'update']);
+    Route::get('projects/{project}/laba-rugi',    [ProjectRapController::class, 'labaRugi']);
+    Route::get('projects/{project}/progress-timeline', [ProjectRapController::class, 'progressTimeline']);
+
+    // RAP global setting
+    Route::get('rap-setting/global', [RapSettingController::class, 'showGlobal']);
+    Route::put('rap-setting/global', [RapSettingController::class, 'updateGlobal']);
 });

@@ -11,7 +11,9 @@ class Transaction extends Model
         'account_id',
         'project_id',
         'user_id',
+        'rap_item_id',
         'date',
+        'company',
         'description',
         'payment_method',
         'income',
@@ -37,5 +39,10 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function rapItem(): BelongsTo
+    {
+        return $this->belongsTo(RapItem::class, 'rap_item_id');
     }
 }
