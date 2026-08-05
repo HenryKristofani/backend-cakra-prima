@@ -48,7 +48,7 @@ class LabaRugiEndpointTest extends TestCase
             ->assertOk()
             ->assertJsonStructure([
                 'items' => [['id', 'description', 'total_price', 'total_realisasi', 'selisih_laba_rugi', 'status_label']],
-                'summary' => ['total_rencana', 'total_realisasi', 'total_selisih', 'status_label', 'potongan_percentage'],
+                'summary' => ['total_rencana', 'total_realisasi', 'total_selisih', 'status_label', 'pajak_percentage'],
             ]);
     }
 
@@ -130,14 +130,14 @@ class LabaRugiEndpointTest extends TestCase
         $this->assertEquals('untung',  $item['status_label']);
     }
 
-    public function test_laba_rugi_applies_potongan_from_setting(): void
+    public function test_laba_rugi_applies_pajak_from_setting(): void
     {
-        // Project-specific potongan 10%
-        RapSetting::create(['project_id' => $this->project->id, 'potongan_percentage' => 10.0]);
+        // Project-specific pajak 10%
+        RapSetting::create(['project_id' => $this->project->id, 'pajak_percentage' => 10.0]);
 
         RapItem::create([
             'category_id' => $this->category->id,
-            'description' => 'Item Dengan Potongan',
+            'description' => 'Item Dengan Pajak',
             'volume'      => 5,
             'unit'        => 'm2',
             'unit_price'  => 100_000,
@@ -149,9 +149,9 @@ class LabaRugiEndpointTest extends TestCase
             ->assertOk()
             ->json();
 
-        // With 10% potongan: effective = 90000, total = 5 * 90000 = 450000
-        $this->assertEquals(450_000.0, $data['items'][0]['total_price']);
-        $this->assertEquals(10.0,      $data['summary']['potongan_percentage']);
+        // With 10% pajak: effective = 110000, total = 5 * 110000 = 550000
+        $this->assertEquals(550_000.0, $data['items'][0]['total_price']);
+        $this->assertEquals(10.0,      $data['summary']['pajak_percentage']);
     }
 
     public function test_laba_rugi_returns_empty_items_for_project_without_rap(): void

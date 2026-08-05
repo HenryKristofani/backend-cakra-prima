@@ -9,64 +9,63 @@ use Illuminate\Http\Request;
 class RapSettingController extends Controller
 {
     /**
-     * GET /projects/{project}/rap-setting
-     * Returns the effective setting for this project (project-specific or global fallback).
+     * Get the effective pajak setting for a project.
+     * Also returns the global default if applicable.
      */
     public function show(Project $project)
     {
-        $projectSetting = RapSetting::where('project_id', $project->id)->first();
-        $globalSetting  = RapSetting::whereNull('project_id')->first();
+        $setting = RapSetting::where('project_id', $project->id)->first();
+        $global  = RapSetting::whereNull('project_id')->first();
 
         return response()->json([
-            'project_setting' => $projectSetting,
-            'global_setting'  => $globalSetting,
-            'effective_potongan_percentage' => RapSetting::resolvePotongan($project->id),
+            'project_setting'               => $setting,
+            'global_setting'                => $global,
+            'effective_pajak_percentage' => RapSetting::resolvePajak($project->id),
         ]);
     }
 
     /**
-     * PUT /projects/{project}/rap-setting
-     * Upsert a project-specific override for potongan_percentage.
+     * Upsert a project-specific override for pajak_percentage.
      */
     public function update(Request $request, Project $project)
     {
         $validated = $request->validate([
-            'potongan_percentage' => 'required|numeric|min:0|max:100',
+            'pajak_percentage' => 'required|numeric|min:0|max:100',
         ]);
 
         $setting = RapSetting::updateOrCreate(
             ['project_id' => $project->id],
-            ['potongan_percentage' => $validated['potongan_percentage']]
+            ['pajak_percentage' => $validated['pajak_percentage']]
         );
 
         return response()->json($setting);
     }
 
+    // ─── Global Settings ────────────────────────────────────────────────────────
+
     /**
-     * GET /rap-setting/global
-     * Returns the global (project_id = NULL) default setting.
+     * Get the global default pajak_percentage.
      */
     public function showGlobal()
     {
         $global = RapSetting::whereNull('project_id')->first();
-        return response()->json($global ?? ['potongan_percentage' => 0.0]);
+        return response()->json($global ?? ['pajak_percentage' => 0.0]);
     }
 
     /**
-     * PUT /rap-setting/global
-     * Upsert the global default potongan_percentage.
+     * Upsert the global default pajak_percentage.
      */
     public function updateGlobal(Request $request)
     {
         $validated = $request->validate([
-            'potongan_percentage' => 'required|numeric|min:0|max:100',
+            'pajak_percentage' => 'required|numeric|min:0|max:100',
         ]);
 
-        $setting = RapSetting::updateOrCreate(
+        $global = RapSetting::updateOrCreate(
             ['project_id' => null],
-            ['potongan_percentage' => $validated['potongan_percentage']]
+            ['pajak_percentage' => $validated['pajak_percentage']]
         );
 
-        return response()->json($setting);
+        return response()->json($global);
     }
 }

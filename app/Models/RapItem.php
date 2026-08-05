@@ -43,20 +43,23 @@ class RapItem extends Model
     // ─── Accessors ───────────────────────────────────────────────────────────────
 
     /**
-     * effective_unit_price = unit_price × (1 - potongan% / 100)
+     * effective_unit_price = unit_price × (1 + pajak% / 100)
      *
-     * Potongan% is resolved from RapSetting for this item's project,
+     * Pajak% is resolved from RapSetting for this item's project,
      * with fallback to global default, then to 0.
      */
     public function getEffectiveUnitPriceAttribute(): float
     {
-        $projectId = $this->category?->project_id;
+        $projectId = $this->category ? $this->category->project_id : null;
+        if (!$projectId) {
+            return (float) $this->unit_price;
+        }
 
-        $potongan = $projectId
-            ? RapSetting::resolvePotongan((int) $projectId)
-            : 0.0;
+        $pajak = $projectId
+            ? \App\Models\RapSetting::resolvePajak($projectId)
+            : 0;
 
-        return (float) $this->unit_price * (1 - $potongan / 100);
+        return round((float) $this->unit_price * (1 + $pajak / 100), 2);
     }
 
     /**

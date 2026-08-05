@@ -100,7 +100,7 @@ class ProjectRapController extends Controller
 
     public function labaRugi(Project $project)
     {
-        $potongan = RapSetting::resolvePotongan($project->id);
+        $pajak = RapSetting::resolvePajak($project->id);
 
         $items = RapItem::whereHas('category', fn ($q) => $q->where('project_id', $project->id))
             ->with('category')
@@ -109,8 +109,8 @@ class ProjectRapController extends Controller
         $totalRencana   = 0.0;
         $totalRealisasi = 0.0;
 
-        $rows = $items->map(function (RapItem $item) use ($potongan, &$totalRencana, &$totalRealisasi) {
-            $effectiveUnitPrice = (float) $item->unit_price * (1 - $potongan / 100);
+        $rows = $items->map(function (RapItem $item) use ($pajak, &$totalRencana, &$totalRealisasi) {
+            $effectiveUnitPrice = (float) $item->unit_price * (1 + $pajak / 100);
             $totalPrice         = round((float) $item->volume * $effectiveUnitPrice, 2);
             $realisasi          = round((float) $item->transactions()->sum('expense'), 2);
             $selisih            = round($totalPrice - $realisasi, 2);
@@ -147,7 +147,7 @@ class ProjectRapController extends Controller
                     $totalSelisih < 0 => 'rugi',
                     default           => 'impas',
                 },
-                'potongan_percentage'   => $potongan,
+                'pajak_percentage'      => $pajak,
             ],
         ]);
     }

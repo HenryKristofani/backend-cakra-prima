@@ -10,11 +10,11 @@ class RapSetting extends Model
 {
     protected $fillable = [
         'project_id',
-        'potongan_percentage',
+        'pajak_percentage',
     ];
 
     protected $casts = [
-        'potongan_percentage' => 'float',
+        'pajak_percentage' => 'float',
         'project_id'          => 'integer',
     ];
 
@@ -24,27 +24,27 @@ class RapSetting extends Model
     }
 
     /**
-     * Resolve the effective potongan% for a given project.
+     * Resolve the effective pajak% for a given project.
      *
      * Resolution order:
      *   1. Project-specific row (project_id = $projectId)
      *   2. Global default row  (project_id = NULL)
      *   3. 0.0 if neither exists
      */
-    public static function resolvePotongan(int $projectId): float
+    public static function resolvePajak(int $projectId): float
     {
         // 1. Project-specific override
         $setting = self::where('project_id', $projectId)->first();
 
         if ($setting) {
-            return (float) $setting->potongan_percentage;
+            return (float) $setting->pajak_percentage;
         }
 
         // 2. Global default (project_id IS NULL)
         $global = self::whereNull('project_id')->first();
 
         if ($global) {
-            return (float) $global->potongan_percentage;
+            return (float) $global->pajak_percentage;
         }
 
         // 3. No setting found at all

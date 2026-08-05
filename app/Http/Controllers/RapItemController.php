@@ -12,9 +12,9 @@ class RapItemController extends Controller
 {
     public function index(RapCategory $rapCategory)
     {
-        $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
+        $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
 
-        return $rapCategory->items()->with('sourceRabItem:id,description,unit_price')->get()->map(fn ($item) => $this->appendCalculatedFields($item, $potongan));
+        return $rapCategory->items()->with('sourceRabItem:id,description,unit_price')->get()->map(fn ($item) => $this->appendCalculatedFields($item, $pajak));
     }
 
     public function store(Request $request, RapCategory $rapCategory)
@@ -77,15 +77,14 @@ class RapItemController extends Controller
                 'items.*.sort_order'  => 'nullable|integer',
             ]);
 
-            $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
+            $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
 
             $createdItems = collect();
             foreach ($validated['items'] as $itemData) {
-                $itemData['category_id'] = $rapCategory->id;
-                $item = RapItem::create($itemData);
+                $item = $rapCategory->items()->create($itemData);
                 $item->setRelation('category', $rapCategory);
                 $item->load('sourceRabItem:id,description,unit_price');
-                $createdItems->push($this->appendCalculatedFields($item, $potongan));
+                $createdItems->push($this->appendCalculatedFields($item, $pajak));
             }
 
             return response()->json($createdItems, 201);
@@ -105,7 +104,7 @@ class RapItemController extends Controller
                 'items.*.sort_order'  => 'nullable|integer',
             ]);
 
-            $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
+            $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
 
             $updatedItems = collect();
             foreach ($validated['items'] as $itemData) {
@@ -113,7 +112,7 @@ class RapItemController extends Controller
                 $item->update($itemData);
                 $item->setRelation('category', $rapCategory);
                 $item->load('sourceRabItem:id,description,unit_price');
-                $updatedItems->push($this->appendCalculatedFields($item, $potongan));
+                $updatedItems->push($this->appendCalculatedFields($item, $pajak));
             }
 
             return response()->json($updatedItems, 200);
@@ -122,9 +121,9 @@ class RapItemController extends Controller
 
     // ─── Helper ─────────────────────────────────────────────────────────────────
 
-    private function appendCalculatedFields(RapItem $item, float $potongan): array
+    private function appendCalculatedFields(RapItem $item, float $pajak): array
     {
-        $effectiveUnitPrice = (float) $item->unit_price * (1 - $potongan / 100);
+        $effectiveUnitPrice = (float) $item->unit_price * (1 + $pajak / 100);
         $totalPrice         = (float) $item->volume * $effectiveUnitPrice;
         $totalRealisasi     = (float) $item->transactions()->sum('expense');
         $selisih            = $totalPrice - $totalRealisasi;
@@ -134,7 +133,7 @@ class RapItemController extends Controller
         $arr['total_price']            = round($totalPrice, 2);
         $arr['total_realisasi']        = round($totalRealisasi, 2);
         $arr['selisih_laba_rugi']      = round($selisih, 2);
-        $arr['potongan_percentage']    = $potongan;
+        $arr['pajak_percentage']       = $pajak;
 
         return $arr;
     }
