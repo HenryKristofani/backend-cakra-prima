@@ -88,6 +88,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // RAB module routes (Phase 3)
+    Route::apiResource('projects.rap-settings', RapSettingController::class)->shallow();
+    
+    // Progress Details
+    Route::get('projects/{project}/progress-detail', [App\Http\Controllers\ProgressDetailController::class, 'index']);
+    Route::get('rab-items/{item}/progress-reports', [App\Http\Controllers\ProgressDetailController::class, 'history']);
+
     Route::apiResource('projects.rab-categories', RabCategoryController::class)->shallow();
     
     // Project-scoped cash advances
