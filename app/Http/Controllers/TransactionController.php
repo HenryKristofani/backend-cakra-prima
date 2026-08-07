@@ -210,32 +210,36 @@ class TransactionController extends Controller
     )]
     public function summary(Request $request)
     {
-        $year = $request->input('year', now()->year);
-        $month = $request->input('month', now()->month);
         $projectId = $request->input('project_id');
 
-        $query = Transaction::query();
+        $baseQuery = Transaction::query();
         if ($projectId) {
-            $query->where('project_id', $projectId);
+            $baseQuery->where('project_id', $projectId);
         }
 
-        $result = $query->selectRaw("
-            SUM(income) as total_income,
-            SUM(expense) as total_expense,
-            SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN income ELSE 0 END) as pemasukan_bulan_ini,
-            SUM(CASE WHEN EXTRACT(MONTH FROM date) = ? AND EXTRACT(YEAR FROM date) = ? THEN expense ELSE 0 END) as pengeluaran_bulan_ini,
-            SUM(CASE WHEN payment_method = 'cash' THEN income ELSE 0 END) as cash_income,
-            SUM(CASE WHEN payment_method = 'cash' THEN expense ELSE 0 END) as cash_expense
-        ", [$month, $year, $month, $year])
-        ->first();
+        $totalIncome = (clone $baseQuery)->sum('income');
+        $totalExpense = (clone $baseQuery)->sum('expense');
+        $cashIncome = (clone $baseQuery)
+            ->where('payment_method', 'cash')
+            ->sum('income');
+        $cashExpense = (clone $baseQuery)
+            ->where('payment_method', 'cash')
+            ->sum('expense');
 
-            return response()->json([
-                'total_saldo_kas' => (float) $result->total_income - (float) $result->total_expense,
-                'pemasukan_bulan_ini' => (float) $result->pemasukan_bulan_ini,
-                'pengeluaran_bulan_ini' => (float) $result->pengeluaran_bulan_ini,
-                'total_saldo_cash' => (float) $result->cash_income - (float) $result->cash_expense,
-            ]);
-        }
+        $periodQuery = (clone $baseQuery)
+            ->when($request->filled('year'), fn ($query) => $query->whereYear('date', $request->input('year')))
+            ->when($request->filled('month'), fn ($query) => $query->whereMonth('date', $request->input('month')));
+
+        $pemasukan = (clone $periodQuery)->sum('income');
+        $pengeluaran = (clone $periodQuery)->sum('expense');
+
+        return response()->json([
+            'total_saldo_kas' => (float) $totalIncome - (float) $totalExpense,
+            'pemasukan_bulan_ini' => (float) $pemasukan,
+            'pengeluaran_bulan_ini' => (float) $pengeluaran,
+            'total_saldo_cash' => (float) $cashIncome - (float) $cashExpense,
+        ]);
+    }
 
     public function exportExcel(Request $request)
     {
