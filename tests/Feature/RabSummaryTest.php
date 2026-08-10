@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\RabCategory;
 use App\Models\RabItem;
 use App\Models\ProgressReport;
+use App\Models\User;
 
 class RabSummaryTest extends TestCase
 {
@@ -15,6 +16,7 @@ class RabSummaryTest extends TestCase
 
     public function test_rab_summary_matches_expected_structure()
     {
+        $user = User::factory()->create();
         $project = Project::create(['name' => 'P1', 'status' => 'aktif', 'location' => 'Jakarta', 'rab_date' => '2026-07-30']);
         $parentCategory = RabCategory::create(['project_id' => $project->id, 'code' => 'A', 'name' => 'Cat A']);
         $childCategory = RabCategory::create(['project_id' => $project->id, 'code' => 'A1', 'name' => 'Cat A1', 'parent_id' => $parentCategory->id]);
@@ -26,7 +28,7 @@ class RabSummaryTest extends TestCase
         ProgressReport::create(['rab_item_id' => $activeItem->id, 'report_date' => now()->toDateString(), 'percentage_complete' => 50]);
         ProgressReport::create(['rab_item_id' => $childActiveItem->id, 'report_date' => now()->toDateString(), 'percentage_complete' => 10]);
 
-        $resp = $this->getJson("/api/projects/{$project->id}/rab-summary");
+        $resp = $this->actingAs($user)->getJson("/api/projects/{$project->id}/rab-summary");
         $resp->assertStatus(200)
             ->assertJsonPath('total_rab_aktif', 5000)
             ->assertJsonPath('total_deduction', 2000)

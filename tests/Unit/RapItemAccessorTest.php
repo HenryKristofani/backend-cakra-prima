@@ -50,7 +50,7 @@ class RapItemAccessorTest extends TestCase
 
     public function test_effective_unit_price_with_project_specific_pajak(): void
     {
-        // unit_price=100000, pajak=10%, expected effective=110000
+        // unit_price=100000, pajak=10%, expected effective=90000 (discount)
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
@@ -58,12 +58,12 @@ class RapItemAccessorTest extends TestCase
         );
 
         $item->load('category');
-        $this->assertEquals(110_000.0, $item->effective_unit_price, 'effective_unit_price harus 110000');
+        $this->assertEquals(90_000.0, $item->effective_unit_price, 'effective_unit_price harus 90000');
     }
 
     public function test_total_price_is_volume_times_effective_unit_price(): void
     {
-        // volume=5, effective=110000, expected total=550000
+        // volume=5, effective=90000, expected total=450000
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
@@ -71,12 +71,12 @@ class RapItemAccessorTest extends TestCase
         );
 
         $item->load('category');
-        $this->assertEquals(550_000.0, $item->total_price, 'total_price harus 550000');
+        $this->assertEquals(450_000.0, $item->total_price, 'total_price harus 450000');
     }
 
     public function test_selisih_laba_rugi_positif_when_under_budget(): void
     {
-        // total_price=550000, realisasi=400000, expected selisih=150000 (untung)
+        // total_price=450000, realisasi=400000, expected selisih=50000 (untung)
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
@@ -97,7 +97,7 @@ class RapItemAccessorTest extends TestCase
 
         $item->load('category');
         $this->assertEquals(400_000.0, $item->total_realisasi, 'total_realisasi harus 400000');
-        $this->assertEquals(150_000.0,  $item->selisih_laba_rugi, 'selisih harus 150000 (untung)');
+        $this->assertEquals(50_000.0,  $item->selisih_laba_rugi, 'selisih harus 50000 (untung)');
     }
 
     public function test_selisih_laba_rugi_negatif_when_over_budget(): void
@@ -121,12 +121,12 @@ class RapItemAccessorTest extends TestCase
         ]);
 
         $item->load('category');
-        $this->assertEquals(-100_000.0, $item->selisih_laba_rugi, 'selisih harus -100000 (rugi)');
+        $this->assertEquals(-200_000.0, $item->selisih_laba_rugi, 'selisih harus -200000 (rugi)');
     }
 
     public function test_resolves_global_pajak_when_no_project_specific_setting(): void
     {
-        // Global 15%, no project-specific → harus pakai 15%
+        // Global 15%, no project-specific → harus pakai 15% → effective = 85000 (100000 × 0.85)
         RapSetting::create([
             'project_id'          => null,
             'pajak_percentage' => 15.0,
@@ -144,7 +144,7 @@ class RapItemAccessorTest extends TestCase
         ]);
 
         $item->load('category');
-        $this->assertEquals(115_000.0, $item->effective_unit_price, 'Harus fallback ke global 15%');
+        $this->assertEquals(85_000.0, $item->effective_unit_price, 'Harus fallback ke global 15%');
     }
 
     public function test_uses_zero_pajak_when_no_setting_exists(): void
@@ -167,7 +167,7 @@ class RapItemAccessorTest extends TestCase
 
     public function test_project_specific_pajak_takes_priority_over_global(): void
     {
-        // Global 20%, project-specific 5% → harus pakai 5%
+        // Global 20%, project-specific 5% → harus pakai 5% → effective = 95000 (100000 × 0.95)
         RapSetting::create(['project_id' => null, 'pajak_percentage' => 20.0]);
 
         $item = $this->createProjectWithItem(
@@ -178,6 +178,6 @@ class RapItemAccessorTest extends TestCase
         );
 
         $item->load('category');
-        $this->assertEquals(105_000.0, $item->effective_unit_price, 'Project-specific 5% harus menang atas global 20%');
+        $this->assertEquals(95_000.0, $item->effective_unit_price, 'Project-specific 5% harus menang atas global 20%');
     }
 }

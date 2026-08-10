@@ -149,8 +149,8 @@ class LabaRugiEndpointTest extends TestCase
             ->assertOk()
             ->json();
 
-        // With 10% pajak: effective = 110000, total = 5 * 110000 = 550000
-        $this->assertEquals(550_000.0, $data['items'][0]['total_price']);
+        // With 10% pajak (discount): effective = 90000, total = 5 * 90000 = 450000
+        $this->assertEquals(450_000.0, $data['items'][0]['total_price']);
         $this->assertEquals(10.0,      $data['summary']['pajak_percentage']);
     }
 

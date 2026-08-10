@@ -5,23 +5,32 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Project;
+use App\Models\User;
 
 class RabCategoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->user = User::factory()->create();
+    }
+
     public function test_create_and_list_categories()
     {
         $project = Project::create(['name' => 'P1', 'status' => 'aktif']);
 
-        $response = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $response = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A',
             'name' => 'Pekerjaan Bongkaran'
         ]);
 
         $response->assertStatus(201)->assertJsonFragment(['name' => 'Pekerjaan Bongkaran']);
 
-        $list = $this->getJson("/api/projects/{$project->id}/rab-categories");
+        $list = $this->actingAs($this->user)->getJson("/api/projects/{$project->id}/rab-categories");
         $list->assertStatus(200)->assertJsonCount(1);
     }
 
@@ -29,18 +38,18 @@ class RabCategoryTest extends TestCase
     {
         $project = Project::create(['name' => 'P1', 'status' => 'aktif']);
 
-        $parent = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $parent = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A',
             'name' => 'Parent Category'
         ])->json();
 
-        $child = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $child = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A1',
             'name' => 'Child Category',
             'parent_id' => $parent['id'],
         ])->json();
 
-        $list = $this->getJson("/api/projects/{$project->id}/rab-categories");
+        $list = $this->actingAs($this->user)->getJson("/api/projects/{$project->id}/rab-categories");
         $list->assertStatus(200)
             ->assertJsonCount(1)
             ->assertJsonPath('0.id', $parent['id'])
@@ -51,20 +60,20 @@ class RabCategoryTest extends TestCase
     {
         $project = Project::create(['name' => 'P1', 'status' => 'aktif']);
 
-        $parent = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $parent = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A',
             'name' => 'Parent Category'
         ])->json();
 
-        $child = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $child = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A1',
             'name' => 'Child Category',
             'parent_id' => $parent['id'],
         ])->json();
 
-        $this->deleteJson("/api/rab-categories/{$parent['id']}")->assertNoContent();
+        $this->actingAs($this->user)->deleteJson("/api/rab-categories/{$parent['id']}")->assertNoContent();
 
-        $this->getJson("/api/projects/{$project->id}/rab-categories")->assertStatus(200)->assertJsonCount(0);
+        $this->actingAs($this->user)->getJson("/api/projects/{$project->id}/rab-categories")->assertStatus(200)->assertJsonCount(0);
         $this->assertDatabaseMissing('rab_categories', ['id' => $child['id']]);
     }
 
@@ -72,18 +81,18 @@ class RabCategoryTest extends TestCase
     {
         $project = Project::create(['name' => 'P1', 'status' => 'aktif']);
 
-        $parent = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $parent = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A',
             'name' => 'Parent'
         ])->json();
 
-        $child = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $child = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'B',
             'name' => 'Child',
             'parent_id' => $parent['id'],
         ])->json();
 
-        $this->putJson("/api/rab-categories/{$parent['id']}", [
+        $this->actingAs($this->user)->putJson("/api/rab-categories/{$parent['id']}", [
             'parent_id' => $child['id'],
         ])->assertStatus(422);
     }
@@ -92,24 +101,24 @@ class RabCategoryTest extends TestCase
     {
         $project = Project::create(['name' => 'P1', 'status' => 'aktif']);
 
-        $a = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $a = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'A',
             'name' => 'A'
         ])->json();
 
-        $b = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $b = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'B',
             'name' => 'B',
             'parent_id' => $a['id'],
         ])->json();
 
-        $c = $this->postJson("/api/projects/{$project->id}/rab-categories", [
+        $c = $this->actingAs($this->user)->postJson("/api/projects/{$project->id}/rab-categories", [
             'code' => 'C',
             'name' => 'C',
             'parent_id' => $b['id'],
         ])->json();
 
-        $this->putJson("/api/rab-categories/{$a['id']}", [
+        $this->actingAs($this->user)->putJson("/api/rab-categories/{$a['id']}", [
             'parent_id' => $c['id'],
         ])->assertStatus(422);
     }

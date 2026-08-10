@@ -43,8 +43,10 @@ class RapItem extends Model
     // ─── Accessors ───────────────────────────────────────────────────────────────
 
     /**
-     * effective_unit_price = unit_price × (1 + pajak% / 100)
+     * effective_unit_price = unit_price × (1 - pajak% / 100)
      *
+     * Pajak (Pajak & Biaya Admin) is a discount/deduction from the contract price.
+     * Formula: Harga RAP = Harga Kontrak dikurangi persentase pajak.
      * Pajak% is resolved from RapSetting for this item's project,
      * with fallback to global default, then to 0.
      */
@@ -59,7 +61,7 @@ class RapItem extends Model
             ? \App\Models\RapSetting::resolvePajak($projectId)
             : 0;
 
-        return round((float) $this->unit_price * (1 + $pajak / 100), 2);
+        return round((float) $this->unit_price * (1 - $pajak / 100), 2);
     }
 
     /**
