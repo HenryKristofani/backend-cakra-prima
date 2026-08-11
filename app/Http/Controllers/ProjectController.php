@@ -90,6 +90,7 @@ class ProjectController extends Controller
             'status' => 'nullable|in:aktif,nonaktif',
             'location' => 'nullable|string|max:255',
             'rab_date' => 'nullable|date',
+            'is_isolated_cash' => 'nullable|boolean',
         ]);
 
         $project = Project::create([
@@ -97,6 +98,7 @@ class ProjectController extends Controller
             'status' => $validated['status'] ?? 'aktif',
             'location' => $validated['location'] ?? null,
             'rab_date' => $validated['rab_date'] ?? null,
+            'is_isolated_cash' => $validated['is_isolated_cash'] ?? false,
         ]);
 
         return response()->json($project, 201);
@@ -168,6 +170,7 @@ class ProjectController extends Controller
             'status' => 'sometimes|in:aktif,nonaktif',
             'location' => 'nullable|string|max:255',
             'rab_date' => 'nullable|date',
+            'is_isolated_cash' => 'sometimes|boolean',
         ]);
 
         $project->update($validated);
@@ -184,6 +187,7 @@ class ProjectController extends Controller
             'projects.*.status' => 'sometimes|in:aktif,nonaktif',
             'projects.*.location' => 'nullable|string|max:255',
             'projects.*.rab_date' => 'nullable|date',
+            'projects.*.is_isolated_cash' => 'sometimes|boolean',
         ]);
 
         $updatedProjects = [];
