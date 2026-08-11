@@ -109,11 +109,10 @@ class ProjectRapController extends Controller
         $totalRencana   = 0.0;
         $totalRealisasi = 0.0;
 
-        $rows = $items->map(function (RapItem $item) use ($pajak, &$totalRencana, &$totalRealisasi) {
-            $effectiveUnitPrice = (float) $item->unit_price * (1 - $pajak / 100);
-            $totalPrice         = round((float) $item->volume * $effectiveUnitPrice, 2);
-            $realisasi          = round((float) $item->transactions()->sum('expense'), 2);
-            $selisih            = round($totalPrice - $realisasi, 2);
+        $rows = $items->map(function (RapItem $item) use (&$totalRencana, &$totalRealisasi) {
+            $totalPrice         = $item->total_price;
+            $realisasi          = $item->total_realisasi;
+            $selisih            = $item->selisih_laba_rugi;
 
             $totalRencana   += $totalPrice;
             $totalRealisasi += $realisasi;

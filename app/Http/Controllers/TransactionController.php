@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exports\TransactionExport;
 use App\Models\Transaction;
+use App\Models\ProjectKasTransaction;
+use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -21,17 +23,39 @@ class TransactionController extends Controller
     )]
     public function index(Request $request)
     {
+        $projectId = $request->input('project_id');
+        $isIsolated = false;
+
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                $isIsolated = true;
+            }
+        }
+
         // Step 1: Fetch ALL rows ascending to calculate accurate running balance
-        $allTransactions = Transaction::with(['project', 'account', 'user', 'rapItem:id,description'])
-            ->orderBy('date', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
+        if ($isIsolated) {
+            $allTransactions = ProjectKasTransaction::with(['project', 'user', 'rapItem:id,description'])
+                ->where('project_id', $projectId)
+                ->orderBy('date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+        } else {
+            $allTransactions = Transaction::with(['project', 'account', 'user', 'rapItem:id,description'])
+                ->orderBy('date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+        }
 
         // Step 2: Calculate running balance for every row
         $runningBalance = 0;
-        $allTransactions = $allTransactions->map(function ($trx) use (&$runningBalance) {
+        $allTransactions = $allTransactions->map(function ($trx) use (&$runningBalance, $isIsolated) {
             $runningBalance += (float) $trx->income - (float) $trx->expense;
             $trx->rekap_saldo = $runningBalance;
+            if ($isIsolated) {
+                $trx->account_id = null;
+                $trx->account = null;
+            }
             return $trx;
         });
 
@@ -48,7 +72,7 @@ class TransactionController extends Controller
                 return date('n', strtotime($trx->date)) == $request->month;
             })->values();
         }
-        if ($request->filled('project_id')) {
+        if (!$isIsolated && $request->filled('project_id')) {
             $allTransactions = $allTransactions->filter(function ($trx) use ($request) {
                 return $trx->project_id == $request->project_id;
             })->values();
@@ -79,7 +103,7 @@ class TransactionController extends Controller
             new OA\Response(response: 201, description: "Berhasil dibuat")
         ]
     )]
-    public function storeNested(Request $request, \App\Models\Project $project)
+    public function storeNested(Request $request, Project $project)
     {
         $validated = $request->validate([
             'date'          => 'required|date',
@@ -95,8 +119,17 @@ class TransactionController extends Controller
 
         $validated['project_id'] = $project->id;
 
-        $trx = Transaction::create($validated);
-        return $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
+        if ($project->is_isolated_cash) {
+            unset($validated['account_id']);
+            $trx = ProjectKasTransaction::create($validated);
+            $trx->load(['project', 'user', 'rapItem:id,description']);
+            $trx->account_id = null;
+            $trx->account = null;
+            return $trx;
+        } else {
+            $trx = Transaction::create($validated);
+            return $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
+        }
     }
 
     #[OA\Post(
@@ -136,6 +169,19 @@ class TransactionController extends Controller
             'expense'       => 'nullable|numeric',
         ]);
 
+        $projectId = $request->input('project_id');
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                unset($validated['account_id']);
+                $trx = ProjectKasTransaction::create($validated);
+                $trx->load(['project', 'user', 'rapItem:id,description']);
+                $trx->account_id = null;
+                $trx->account = null;
+                return $trx;
+            }
+        }
+
         $trx = Transaction::create($validated);
         return $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
     }
@@ -164,7 +210,7 @@ class TransactionController extends Controller
             new OA\Response(response: 200, description: "Berhasil diupdate")
         ]
     )]
-    public function update(Request $request, Transaction $transaction)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'date'          => 'sometimes|date',
@@ -179,8 +225,29 @@ class TransactionController extends Controller
             'expense'       => 'nullable|numeric',
         ]);
 
-        $transaction->update($validated);
-        return $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
+        $projectId = $request->input('project_id');
+        $isIsolated = false;
+
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                $isIsolated = true;
+            }
+        }
+
+        if ($isIsolated) {
+            $transaction = ProjectKasTransaction::findOrFail($id);
+            unset($validated['account_id']);
+            $transaction->update($validated);
+            $transaction->load(['project', 'user', 'rapItem:id,description']);
+            $transaction->account_id = null;
+            $transaction->account = null;
+            return $transaction;
+        } else {
+            $transaction = Transaction::findOrFail($id);
+            $transaction->update($validated);
+            return $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
+        }
     }
 
     #[OA\Delete(
@@ -194,9 +261,26 @@ class TransactionController extends Controller
             new OA\Response(response: 204, description: "Berhasil dihapus")
         ]
     )]
-    public function destroy(Transaction $transaction)
+    public function destroy(Request $request, $id)
     {
-        $transaction->delete();
+        $projectId = $request->input('project_id');
+        $isIsolated = false;
+
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                $isIsolated = true;
+            }
+        }
+
+        if ($isIsolated) {
+            $transaction = ProjectKasTransaction::findOrFail($id);
+            $transaction->delete();
+        } else {
+            $transaction = Transaction::findOrFail($id);
+            $transaction->delete();
+        }
+        
         return response()->noContent();
     }
 
@@ -211,10 +295,22 @@ class TransactionController extends Controller
     public function summary(Request $request)
     {
         $projectId = $request->input('project_id');
+        $isIsolated = false;
 
-        $baseQuery = Transaction::query();
         if ($projectId) {
-            $baseQuery->where('project_id', $projectId);
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                $isIsolated = true;
+            }
+        }
+
+        if ($isIsolated) {
+            $baseQuery = ProjectKasTransaction::query()->where('project_id', $projectId);
+        } else {
+            $baseQuery = Transaction::query();
+            if ($projectId) {
+                $baseQuery->where('project_id', $projectId);
+            }
         }
 
         $totalIncome = (clone $baseQuery)->sum('income');
@@ -243,11 +339,40 @@ class TransactionController extends Controller
 
     public function exportExcel(Request $request)
     {
+        $projectId = $request->input('project_id');
+        $isIsolated = false;
+
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                $isIsolated = true;
+            }
+        }
+
         // Fetch ALL rows ascending for accurate running balance
-        $allTransactions = Transaction::query()
-            ->orderBy('date', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
+        if ($isIsolated) {
+            $allTransactions = ProjectKasTransaction::with(['project', 'user', 'rapItem:id,description'])
+                ->where('project_id', $projectId)
+                ->orderBy('date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+        } else {
+            $allTransactions = Transaction::with(['project', 'account', 'user', 'rapItem:id,description'])
+                ->orderBy('date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+        
+        $runningBalance = 0;
+        $allTransactions = $allTransactions->map(function ($trx) use (&$runningBalance, $isIsolated) {
+            $runningBalance += (float) $trx->income - (float) $trx->expense;
+            $trx->rekap_saldo = $runningBalance;
+            if ($isIsolated) {
+                $trx->account_id = null;
+                $trx->account = null;
+            }
+            return $trx;
+        });
 
         // Apply year/month filter
         if ($request->filled('year')) {
@@ -259,6 +384,11 @@ class TransactionController extends Controller
             $allTransactions = $allTransactions->filter(fn($t) =>
                 Carbon::parse($t->date)->month == $request->month
             )->values();
+        }
+        if (!$isIsolated && $request->filled('project_id')) {
+            $allTransactions = $allTransactions->filter(function ($trx) use ($request) {
+                return $trx->project_id == $request->project_id;
+            })->values();
         }
 
         // Build period label

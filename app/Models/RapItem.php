@@ -79,6 +79,13 @@ class RapItem extends Model
      */
     public function getTotalRealisasiAttribute(): float
     {
+        $projectId = $this->category ? $this->category->project_id : null;
+        if ($projectId) {
+            $project = \App\Models\Project::find($projectId);
+            if ($project && $project->is_isolated_cash) {
+                return (float) \App\Models\ProjectKasTransaction::where('rap_item_id', $this->id)->sum('expense');
+            }
+        }
         return (float) $this->transactions()->sum('expense');
     }
 

@@ -13,15 +13,22 @@ class Project extends Model
         'status',
         'location',
         'rab_date',
+        'is_isolated_cash',
     ];
 
     protected $casts = [
         'rab_date' => 'date',
+        'is_isolated_cash' => 'boolean',
     ];
 
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function projectKasTransactions(): HasMany
+    {
+        return $this->hasMany(ProjectKasTransaction::class);
     }
 
     /**

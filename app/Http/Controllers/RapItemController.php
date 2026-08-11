@@ -123,16 +123,11 @@ class RapItemController extends Controller
 
     private function appendCalculatedFields(RapItem $item, float $pajak): array
     {
-        $effectiveUnitPrice = (float) $item->unit_price * (1 + $pajak / 100);
-        $totalPrice         = (float) $item->volume * $effectiveUnitPrice;
-        $totalRealisasi     = (float) $item->transactions()->sum('expense');
-        $selisih            = $totalPrice - $totalRealisasi;
-
         $arr = $item->toArray();
-        $arr['effective_unit_price']   = round($effectiveUnitPrice, 2);
-        $arr['total_price']            = round($totalPrice, 2);
-        $arr['total_realisasi']        = round($totalRealisasi, 2);
-        $arr['selisih_laba_rugi']      = round($selisih, 2);
+        $arr['effective_unit_price']   = $item->effective_unit_price;
+        $arr['total_price']            = round($item->total_price, 2);
+        $arr['total_realisasi']        = round($item->total_realisasi, 2);
+        $arr['selisih_laba_rugi']      = round($item->selisih_laba_rugi, 2);
         $arr['pajak_percentage']       = $pajak;
 
         return $arr;
