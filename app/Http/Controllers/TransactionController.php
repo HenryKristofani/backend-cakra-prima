@@ -133,6 +133,50 @@ class TransactionController extends Controller
     }
 
     #[OA\Post(
+        path: "/api/projects/{project}/transactions/bulk",
+        summary: "Tambah transaksi nested untuk project secara bulk",
+        tags: ["Transactions"],
+        responses: [
+            new OA\Response(response: 201, description: "Berhasil dibuat")
+        ]
+    )]
+    public function bulkStore(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'items'                  => 'required|array|min:1',
+            'items.*.date'           => 'required|date',
+            'items.*.account_id'     => 'nullable|exists:accounts,id',
+            'items.*.user_id'        => 'nullable|exists:users,id',
+            'items.*.rap_item_id'    => 'nullable|exists:rap_items,id',
+            'items.*.company'        => 'nullable|string',
+            'items.*.description'    => 'required|string',
+            'items.*.payment_method' => 'required|in:cash,rek',
+            'items.*.income'         => 'nullable|numeric',
+            'items.*.expense'        => 'nullable|numeric',
+        ]);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $project) {
+            $createdItems = [];
+            foreach ($validated['items'] as $itemData) {
+                $itemData['project_id'] = $project->id;
+                if ($project->is_isolated_cash) {
+                    unset($itemData['account_id']);
+                    $trx = ProjectKasTransaction::create($itemData);
+                    $trx->load(['project', 'user', 'rapItem:id,description']);
+                    $trx->account_id = null;
+                    $trx->account = null;
+                    $createdItems[] = $trx;
+                } else {
+                    $trx = Transaction::create($itemData);
+                    $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
+                    $createdItems[] = $trx;
+                }
+            }
+            return response()->json($createdItems, 201);
+        });
+    }
+
+    #[OA\Post(
         path: "/api/transactions",
         summary: "Tambah transaksi baru",
         tags: ["Transactions"],
@@ -248,6 +292,174 @@ class TransactionController extends Controller
             $transaction->update($validated);
             return $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
         }
+    }
+
+    #[OA\Post(
+        path: "/api/transactions/bulk",
+        summary: "Tambah banyak transaksi sekaligus (Global)",
+        tags: ["Transactions"],
+        responses: [
+            new OA\Response(response: 201, description: "Berhasil")
+        ]
+    )]
+    public function bulkStoreGlobal(Request $request)
+    {
+        $validated = $request->validate([
+            'items'                  => 'required|array|min:1',
+            'items.*.project_id'     => 'nullable|exists:projects,id',
+            'items.*.date'           => 'required|date',
+            'items.*.account_id'     => 'nullable|exists:accounts,id',
+            'items.*.user_id'        => 'nullable|exists:users,id',
+            'items.*.rap_item_id'    => 'nullable|exists:rap_items,id',
+            'items.*.company'        => 'nullable|string',
+            'items.*.description'    => 'required|string',
+            'items.*.payment_method' => 'required|in:cash,rek',
+            'items.*.income'         => 'nullable|numeric',
+            'items.*.expense'        => 'nullable|numeric',
+        ]);
+
+        $batchIsolated = [];
+        $batchGlobal = [];
+
+        foreach ($validated['items'] as $itemData) {
+            $projectId = $itemData['project_id'] ?? null;
+            $isIsolated = false;
+            
+            if ($projectId) {
+                $project = Project::find($projectId);
+                if ($project && $project->is_isolated_cash) {
+                    $isIsolated = true;
+                }
+            }
+
+            // Set user_id automatically
+            $itemData['user_id'] = $itemData['user_id'] ?? $request->user()?->id ?? 1;
+
+            if ($isIsolated) {
+                $batchIsolated[] = $itemData;
+            } else {
+                $batchGlobal[] = $itemData;
+            }
+        }
+
+        $createdItems = [];
+
+        if (count($batchIsolated) > 0) {
+            $createdIsolated = \Illuminate\Support\Facades\DB::transaction(function () use ($batchIsolated) {
+                $results = [];
+                foreach ($batchIsolated as $itemData) {
+                    unset($itemData['account_id']);
+                    $trx = ProjectKasTransaction::create($itemData);
+                    $trx->load(['project', 'user', 'rapItem:id,description']);
+                    $results[] = $trx;
+                }
+                return $results;
+            });
+            $createdItems = array_merge($createdItems, $createdIsolated);
+        }
+
+        if (count($batchGlobal) > 0) {
+            $createdGlobal = \Illuminate\Support\Facades\DB::transaction(function () use ($batchGlobal) {
+                $results = [];
+                foreach ($batchGlobal as $itemData) {
+                    $trx = Transaction::create($itemData);
+                    $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
+                    $results[] = $trx;
+                }
+                return $results;
+            });
+            $createdItems = array_merge($createdItems, $createdGlobal);
+        }
+
+        return response()->json($createdItems, 201);
+    }
+
+    #[OA\Put(
+        path: "/api/transactions/bulk",
+        summary: "Update transaksi secara bulk",
+        tags: ["Transactions"],
+        responses: [
+            new OA\Response(response: 200, description: "Berhasil diupdate")
+        ]
+    )]
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'items'                  => 'required|array|min:1',
+            'items.*.id'             => 'required|integer',
+            'items.*.project_id'     => 'nullable|exists:projects,id',
+            'items.*.date'           => 'sometimes|date',
+            'items.*.account_id'     => 'nullable|exists:accounts,id',
+            'items.*.user_id'        => 'nullable|exists:users,id',
+            'items.*.rap_item_id'    => 'nullable|exists:rap_items,id',
+            'items.*.company'        => 'nullable|string',
+            'items.*.description'    => 'sometimes|string',
+            'items.*.payment_method' => 'sometimes|in:cash,rek',
+            'items.*.income'         => 'nullable|numeric',
+            'items.*.expense'        => 'nullable|numeric',
+        ]);
+
+        $batchIsolated = [];
+        $batchGlobal = [];
+
+        foreach ($validated['items'] as $itemData) {
+            $projectId = $itemData['project_id'] ?? null;
+            $isIsolated = false;
+            
+            if ($projectId) {
+                $project = Project::find($projectId);
+                if ($project && $project->is_isolated_cash) {
+                    $isIsolated = true;
+                }
+            }
+
+            if ($isIsolated) {
+                $batchIsolated[] = $itemData;
+            } else {
+                $batchGlobal[] = $itemData;
+            }
+        }
+
+        $updatedItems = [];
+
+        if (count($batchIsolated) > 0) {
+            $updatedIsolated = \Illuminate\Support\Facades\DB::transaction(function () use ($batchIsolated) {
+                $results = [];
+                foreach ($batchIsolated as $itemData) {
+                    $transaction = ProjectKasTransaction::findOrFail($itemData['id']);
+                    $updateData = $itemData;
+                    unset($updateData['id']);
+                    unset($updateData['account_id']);
+                    
+                    $transaction->update($updateData);
+                    $transaction->load(['project', 'user', 'rapItem:id,description']);
+                    $transaction->account_id = null;
+                    $transaction->account = null;
+                    $results[] = $transaction;
+                }
+                return $results;
+            });
+            $updatedItems = array_merge($updatedItems, $updatedIsolated);
+        }
+
+        if (count($batchGlobal) > 0) {
+            $updatedGlobal = \Illuminate\Support\Facades\DB::transaction(function () use ($batchGlobal) {
+                $results = [];
+                foreach ($batchGlobal as $itemData) {
+                    $transaction = Transaction::findOrFail($itemData['id']);
+                    $updateData = $itemData;
+                    unset($updateData['id']);
+                    
+                    $transaction->update($updateData);
+                    $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
+                    $results[] = $transaction;
+                }
+                return $results;
+            });
+            $updatedItems = array_merge($updatedItems, $updatedGlobal);
+        }
+
+        return response()->json($updatedItems, 200);
     }
 
     #[OA\Delete(

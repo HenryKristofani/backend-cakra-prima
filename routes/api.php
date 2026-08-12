@@ -39,7 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
     Route::get('projects/{project}/rab-summary', [App\Http\Controllers\ProjectRabSummaryController::class, '__invoke']);
     Route::get('projects/{project}/rab-export', [App\Http\Controllers\ProjectRabSummaryController::class, 'exportExcel']);
+    Route::post('projects/{project}/transactions/bulk', [TransactionController::class, 'bulkStore']);
     Route::post('projects/{project}/transactions', [TransactionController::class, 'storeNested']);
+    Route::post('transactions/bulk', [TransactionController::class, 'bulkStoreGlobal']);
+    Route::put('transactions/bulk', [TransactionController::class, 'bulkUpdate']);
     Route::apiResource('transactions', TransactionController::class);
     Route::apiResource('debts', DebtController::class);
     Route::apiResource('installments', InstallmentController::class);
