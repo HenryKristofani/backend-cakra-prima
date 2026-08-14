@@ -254,7 +254,22 @@ class ProjectRapController extends Controller
         return response()->json($statuses);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GET /projects/{project}/rap/unsynced-rab-items-count
+    // Count RAB items that are active/reduced but don't exist in RAP
+    // ─────────────────────────────────────────────────────────────────────────────
+    public function unsyncedRabItemsCount(Project $project)
+    {
+        $count = DB::table('rab_items')
+            ->join('rab_categories', 'rab_items.category_id', '=', 'rab_categories.id')
+            ->leftJoin('rap_items', 'rab_items.id', '=', 'rap_items.source_rab_item_id')
+            ->where('rab_categories.project_id', $project->id)
+            ->where('rab_items.status', '!=', 'dibatalkan')
+            ->whereNull('rap_items.id')
+            ->count();
 
+        return response()->json(['count' => $count]);
+    }
 
     public function labaRugi(Project $project)
     {

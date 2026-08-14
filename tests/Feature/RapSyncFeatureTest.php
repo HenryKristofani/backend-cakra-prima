@@ -240,6 +240,47 @@ class RapSyncFeatureTest extends TestCase
                  ->assertJsonPath("{$rapItem->id}.status", 'rab_removed');
     }
 
+    // ─── unsynced-rab-items-count ──────────────────────────────────────────────
+
+    public function test_unsynced_rab_items_count_returns_correct_number()
+    {
+        $this->generateInitialRap();
+
+        // 1 existing synced item
+        // Now add 2 new items in RAB that are not in RAP
+        RabItem::create([
+            'category_id' => $this->rabCat->id,
+            'description' => 'Unsynced 1',
+            'volume'      => 5,
+            'unit'        => 'pcs',
+            'unit_price'  => 1000,
+            'status'      => 'aktif',
+        ]);
+        RabItem::create([
+            'category_id' => $this->rabCat->id,
+            'description' => 'Unsynced 2',
+            'volume'      => 10,
+            'unit'        => 'm',
+            'unit_price'  => 2000,
+            'status'      => 'aktif',
+        ]);
+        
+        // Add 1 cancelled item (should be ignored)
+        RabItem::create([
+            'category_id' => $this->rabCat->id,
+            'description' => 'Cancelled Unsynced',
+            'volume'      => 1,
+            'unit'        => 'ls',
+            'unit_price'  => 500,
+            'status'      => 'dibatalkan',
+        ]);
+
+        $response = $this->getJson("/api/projects/{$this->project->id}/rap/unsynced-rab-items-count");
+
+        $response->assertOk()
+                 ->assertJsonPath('count', 2);
+    }
+
     // ─── sync-from-rab ─────────────────────────────────────────────────────────
 
     public function test_sync_from_rab_updates_description_and_volume_not_unit_price()
