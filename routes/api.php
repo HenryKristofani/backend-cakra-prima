@@ -124,8 +124,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // RAP project-level endpoints
-    Route::get('projects/{project}/rap-items',        [ProjectRapController::class, 'rapItems']);
+    Route::get('projects/{project}/rap-items',              [ProjectRapController::class, 'rapItems']);
     Route::post('projects/{project}/rap/generate-from-rab', [ProjectRapController::class, 'generateFromRab']);
+    Route::post('projects/{project}/rap/sync-new-items',    [ProjectRapController::class, 'syncNewItems']);
+    Route::get('projects/{project}/rap/sync-status',        [ProjectRapController::class, 'syncStatus']);
+    Route::post('rap-items/{rapItem}/sync-from-rab',        [RapItemController::class, 'syncFromRab']);
     Route::get('projects/{project}/rap-setting',  [RapSettingController::class, 'show']);
     Route::put('projects/{project}/rap-setting',  [RapSettingController::class, 'update']);
     Route::get('projects/{project}/laba-rugi',    [ProjectRapController::class, 'labaRugi']);

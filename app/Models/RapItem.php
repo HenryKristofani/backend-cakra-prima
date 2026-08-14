@@ -16,6 +16,8 @@ class RapItem extends Model
         'unit_price',
         'sort_order',
         'source_rab_item_id',
+        'source_rab_description_snapshot',
+        'source_rab_volume_snapshot',
     ];
 
     protected $casts = [

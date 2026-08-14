@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RabItem;
 use App\Models\RapCategory;
 use App\Models\RapItem;
 use App\Models\RapSetting;
@@ -131,5 +132,44 @@ class RapItemController extends Controller
         $arr['pajak_percentage']       = $pajak;
 
         return $arr;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // POST /rap-items/{rapItem}/sync-from-rab
+    // Re-sync a single rap_item with latest data from its source rab_item.
+    // Updates: description, volume, and snapshots.
+    // Does NOT touch unit_price.
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public function syncFromRab(RapItem $rapItem)
+    {
+        if (! $rapItem->source_rab_item_id) {
+            return response()->json(['message' => 'Item RAP ini tidak memiliki sumber RAB yang terhubung.'], 400);
+        }
+
+        $rabItem = RabItem::find($rapItem->source_rab_item_id);
+
+        if (! $rabItem) {
+            return response()->json(['message' => 'Item RAB sumber sudah dihapus, tidak bisa di-sync.'], 400);
+        }
+
+        if ($rabItem->status === 'dibatalkan') {
+            return response()->json(['message' => 'Item RAB sumber sudah dibatalkan, tidak bisa di-sync.'], 400);
+        }
+
+        $rapItem->update([
+            'description'                     => $rabItem->description,
+            'volume'                          => $rabItem->volume,
+            'source_rab_description_snapshot' => $rabItem->description,
+            'source_rab_volume_snapshot'      => $rabItem->volume,
+            // unit_price intentionally NOT updated
+        ]);
+
+        $rapItem->refresh();
+
+        return response()->json([
+            'message' => 'Berhasil di-sync dari RAB.',
+            'item'    => $rapItem->load('sourceRabItem:id,description,unit_price'),
+        ]);
     }
 }

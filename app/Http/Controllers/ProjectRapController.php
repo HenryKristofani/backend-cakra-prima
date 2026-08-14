@@ -79,13 +79,15 @@ class ProjectRapController extends Controller
 
                 foreach ($rabCategory->items as $rabItem) {
                     RapItem::create([
-                        'category_id'        => $rapCategory->id,
-                        'description'        => $rabItem->description,
-                        'volume'             => $rabItem->volume,
-                        'unit'               => $rabItem->unit,
-                        'unit_price'         => 0, // start from 0
-                        'sort_order'         => $rabItem->sort_order,
-                        'source_rab_item_id' => $rabItem->id,
+                        'category_id'                      => $rapCategory->id,
+                        'description'                      => $rabItem->description,
+                        'volume'                           => $rabItem->volume,
+                        'unit'                             => $rabItem->unit,
+                        'unit_price'                       => 0, // start from 0
+                        'sort_order'                       => $rabItem->sort_order,
+                        'source_rab_item_id'               => $rabItem->id,
+                        'source_rab_description_snapshot'  => $rabItem->description,
+                        'source_rab_volume_snapshot'       => $rabItem->volume,
                     ]);
                 }
             }
@@ -95,8 +97,164 @@ class ProjectRapController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
-    // GET /projects/{project}/laba-rugi
+    // POST /projects/{project}/rap/sync-new-items
+    // Adds new rap_items for any rab_item not yet in RAP. Also auto-creates
+    // rap_category if the rab_category doesn't have a matching rap_category yet.
     // ─────────────────────────────────────────────────────────────────────────────
+
+    public function syncNewItems(Project $project)
+    {
+        return DB::transaction(function () use ($project) {
+            // 1. Collect all rab_item IDs already tracked in rap_items for this project
+            $trackedRabIds = RapItem::whereHas('category', fn ($q) => $q->where('project_id', $project->id))
+                ->whereNotNull('source_rab_item_id')
+                ->pluck('source_rab_item_id')
+                ->toArray();
+
+            // 2. Fetch rab_items (non-cancelled) not yet tracked, eager-load their category
+            $newRabItems = RabItem::whereHas('category', fn ($q) => $q->where('project_id', $project->id))
+                ->where('status', '!=', 'dibatalkan')
+                ->whereNotIn('id', $trackedRabIds)
+                ->with(['category'])
+                ->get();
+
+            if ($newRabItems->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada item RAB baru yang perlu di-sync.', 'created_count' => 0]);
+            }
+
+            // 3. Build a map of existing rap_categories for this project, keyed by rab_category id
+            //    Using source_rab_category_id if stored, or by matching name (fallback)
+            $existingRapCategories = RapCategory::where('project_id', $project->id)->get();
+            // Map: rab_category_id => rap_category (if it was generated from that rab_category)
+            // We detect this by matching name + project, mirroring the generateFromRab pattern.
+            $rapCatByName = $existingRapCategories->keyBy('name');
+
+            // Also we need to know which rab_category maps to which rap_category
+            // We'll build this on the fly per rab_category encountered.
+            $rabCatIdToRapCat = []; // rab_category.id => RapCategory model
+
+            $createdCount = 0;
+
+            // Group new rab_items by their rab_category, sort by category parent_id for hierarchy
+            $groupedByRabCat = $newRabItems->groupBy('category_id');
+
+            // Build an ordered list of rab_categories for the new items (parents first)
+            $rabCatIds = $groupedByRabCat->keys()->toArray();
+            $rabCatsForNew = RabCategory::whereIn('id', $rabCatIds)
+                ->get()
+                ->sortBy('parent_id'); // ensure parents processed before children
+
+            foreach ($rabCatsForNew as $rabCategory) {
+                // Find or auto-create the matching rap_category
+                if (isset($rabCatIdToRapCat[$rabCategory->id])) {
+                    $rapCategory = $rabCatIdToRapCat[$rabCategory->id];
+                } elseif ($rapCatByName->has($rabCategory->name)) {
+                    $rapCategory = $rapCatByName->get($rabCategory->name);
+                    $rabCatIdToRapCat[$rabCategory->id] = $rapCategory;
+                } else {
+                    // Auto-create new rap_category mirroring the rab_category
+                    // Resolve parent rap_category if rab parent exists
+                    $newParentId = null;
+                    if ($rabCategory->parent_id) {
+                        // If the rab parent is already mapped, use it
+                        $newParentId = isset($rabCatIdToRapCat[$rabCategory->parent_id])
+                            ? $rabCatIdToRapCat[$rabCategory->parent_id]->id
+                            : null;
+                    }
+
+                    $rapCategory = RapCategory::create([
+                        'project_id' => $project->id,
+                        'parent_id'  => $newParentId,
+                        'code'       => $rabCategory->code,
+                        'name'       => $rabCategory->name,
+                        'sort_order' => $rabCategory->sort_order,
+                    ]);
+                    $rapCatByName->put($rapCategory->name, $rapCategory);
+                    $rabCatIdToRapCat[$rabCategory->id] = $rapCategory;
+                }
+
+                // Create rap_items for this category's new rab_items
+                $itemsForCat = $groupedByRabCat->get($rabCategory->id, collect());
+                foreach ($itemsForCat as $rabItem) {
+                    RapItem::create([
+                        'category_id'                      => $rapCategory->id,
+                        'description'                      => $rabItem->description,
+                        'volume'                           => $rabItem->volume,
+                        'unit'                             => $rabItem->unit,
+                        'unit_price'                       => 0,
+                        'sort_order'                       => $rabItem->sort_order,
+                        'source_rab_item_id'               => $rabItem->id,
+                        'source_rab_description_snapshot'  => $rabItem->description,
+                        'source_rab_volume_snapshot'       => $rabItem->volume,
+                    ]);
+                    $createdCount++;
+                }
+            }
+
+            return response()->json([
+                'message'       => "Berhasil menambahkan {$createdCount} item RAP baru dari RAB.",
+                'created_count' => $createdCount,
+            ], 201);
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GET /projects/{project}/rap/sync-status
+    // Returns sync status for every rap_item with a source_rab_item_id.
+    // Single LEFT JOIN query — O(1) DB hits regardless of item count.
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public function syncStatus(Project $project)
+    {
+        $rows = DB::table('rap_items')
+            ->join('rap_categories', 'rap_items.category_id', '=', 'rap_categories.id')
+            ->leftJoin('rab_items', 'rap_items.source_rab_item_id', '=', 'rab_items.id')
+            ->where('rap_categories.project_id', $project->id)
+            ->whereNotNull('rap_items.source_rab_item_id')
+            ->select([
+                'rap_items.id as rap_item_id',
+                'rap_items.source_rab_description_snapshot as snapshot_desc',
+                'rap_items.source_rab_volume_snapshot as snapshot_volume',
+                'rab_items.id as rab_item_id',
+                'rab_items.description as latest_desc',
+                'rab_items.volume as latest_volume',
+                'rab_items.status as rab_status',
+            ])
+            ->get();
+
+        $statuses = $rows->mapWithKeys(function ($row) {
+            $key = (string) $row->rap_item_id;
+
+            // rab_removed: source deleted or cancelled
+            if (! $row->rab_item_id || $row->rab_status === 'dibatalkan') {
+                return [$key => ['status' => 'rab_removed']];
+            }
+
+            // rab_changed: description or volume differs from snapshot
+            $descChanged   = $row->latest_desc !== $row->snapshot_desc;
+            $volumeChanged = abs((float) $row->latest_volume - (float) $row->snapshot_volume) > 0.0001;
+
+            if ($descChanged || $volumeChanged) {
+                return [$key => [
+                    'status'     => 'rab_changed',
+                    'latest_rab' => [
+                        'description' => $row->latest_desc,
+                        'volume'      => (float) $row->latest_volume,
+                    ],
+                    'snapshot' => [
+                        'description' => $row->snapshot_desc,
+                        'volume'      => (float) $row->snapshot_volume,
+                    ],
+                ]];
+            }
+
+            return [$key => ['status' => 'synced']];
+        });
+
+        return response()->json($statuses);
+    }
+
+
 
     public function labaRugi(Project $project)
     {
