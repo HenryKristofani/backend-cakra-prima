@@ -283,7 +283,7 @@ class RapSyncFeatureTest extends TestCase
 
     // ─── sync-from-rab ─────────────────────────────────────────────────────────
 
-    public function test_sync_from_rab_updates_description_and_volume_not_unit_price()
+    public function test_sync_from_rab_updates_description_volume_and_unit_price()
     {
         [, $rapItem] = $this->generateInitialRap();
         $rapItem->update(['unit_price' => 99999]); // set a known unit_price
@@ -296,11 +296,12 @@ class RapSyncFeatureTest extends TestCase
         $response->assertOk()
                  ->assertJsonPath('message', 'Berhasil di-sync dari RAB.');
 
+        // Expected unit_price = rab_item.unit_price * (1 - 0) = 5000 (since no pajak is set in this test)
         $this->assertDatabaseHas('rap_items', [
             'id'                              => $rapItem->id,
             'description'                     => 'Deskripsi Baru',
             'volume'                          => 25,
-            'unit_price'                      => 99999, // MUST NOT change
+            'unit_price'                      => 5000,
             'source_rab_description_snapshot' => 'Deskripsi Baru',
             'source_rab_volume_snapshot'      => 25,
         ]);

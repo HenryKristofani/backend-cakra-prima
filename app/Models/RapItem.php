@@ -22,7 +22,8 @@ class RapItem extends Model
 
     protected $casts = [
         'volume'     => 'float',
-        'unit_price' => 'float',
+        // Note: unit_price is NOT cast here because we have a getUnitPriceAttribute accessor
+        // that handles the on-the-fly calculation for RAB-sourced items.
     ];
 
     // ─── Relationships ──────────────────────────────────────────────────────────
@@ -45,25 +46,48 @@ class RapItem extends Model
     // ─── Accessors ───────────────────────────────────────────────────────────────
 
     /**
-     * effective_unit_price = unit_price × (1 - pajak% / 100)
+     * getUnitPriceAttribute
+     * 
+     * If this is a RAB-sourced item, override the unit_price returned from the database
+     * by calculating it on-the-fly: source_rab_item.unit_price * (1 - pajak% / 100).
+     * Requires sourceRabItem and category relations to be loaded.
+     */
+    public function getUnitPriceAttribute($value)
+    {
+        if ($this->source_rab_item_id && $this->relationLoaded('sourceRabItem') && $this->sourceRabItem) {
+            $projectId = $this->category ? $this->category->project_id : null;
+            if ($projectId) {
+                $pajakPct = \App\Models\RapSetting::resolvePajak($projectId);
+                return (float) $this->sourceRabItem->unit_price * (1 - $pajakPct / 100);
+            }
+        }
+        return (float) $value;
+    }
+
+    /**
+     * effective_unit_price
      *
-     * Pajak (Pajak & Biaya Admin) is a discount/deduction from the contract price.
-     * Formula: Harga RAP = Harga Kontrak dikurangi persentase pajak.
-     * Pajak% is resolved from RapSetting for this item's project,
-     * with fallback to global default, then to 0.
+     * For RAB-sourced items: tax is already baked into the stored unit_price column.
+     * Returning effective_unit_price = stored unit_price (raw DB value) avoids double-deduction.
+     *
+     * For manual items: apply the standard formula unit_price × (1 - pajak% / 100).
      */
     public function getEffectiveUnitPriceAttribute(): float
     {
-        $projectId = $this->category ? $this->category->project_id : null;
-        if (!$projectId) {
-            return (float) $this->unit_price;
+        if ($this->source_rab_item_id) {
+            // For RAB-sourced items, unit_price in DB is already RAB - pajak%.
+            // Return the raw DB value to avoid applying pajak again.
+            return round((float) $this->getRawOriginal('unit_price'), 2);
         }
 
-        $pajak = $projectId
-            ? \App\Models\RapSetting::resolvePajak($projectId)
-            : 0;
+        $projectId = $this->category ? $this->category->project_id : null;
+        if (!$projectId) {
+            return (float) $this->getRawOriginal('unit_price');
+        }
 
-        return round((float) $this->unit_price * (1 - $pajak / 100), 2);
+        $pajak = \App\Models\RapSetting::resolvePajak($projectId);
+
+        return round((float) $this->getRawOriginal('unit_price') * (1 - $pajak / 100), 2);
     }
 
     /**

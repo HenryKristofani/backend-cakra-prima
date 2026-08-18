@@ -54,6 +54,10 @@ class RapItemController extends Controller
             'sort_order'  => 'nullable|integer',
         ]);
 
+        if ($item->source_rab_item_id && isset($validated['unit_price'])) {
+            unset($validated['unit_price']); // Prevent manual unit_price updates for RAB-sourced items
+        }
+
         $item->update($validated);
         $item->load(['category', 'sourceRabItem:id,description,unit_price']);
 
@@ -110,6 +114,11 @@ class RapItemController extends Controller
             $updatedItems = collect();
             foreach ($validated['items'] as $itemData) {
                 $item = RapItem::where('category_id', $rapCategory->id)->findOrFail($itemData['id']);
+                
+                if ($item->source_rab_item_id && isset($itemData['unit_price'])) {
+                    unset($itemData['unit_price']);
+                }
+
                 $item->update($itemData);
                 $item->setRelation('category', $rapCategory);
                 $item->load('sourceRabItem:id,description,unit_price');
@@ -159,10 +168,11 @@ class RapItemController extends Controller
 
         $rapItem->update([
             'description'                     => $rabItem->description,
-            'volume'                          => $rabItem->volume,
+            'volume'                          => (float) $rabItem->volume,
             'source_rab_description_snapshot' => $rabItem->description,
-            'source_rab_volume_snapshot'      => $rabItem->volume,
-            // unit_price intentionally NOT updated
+            'source_rab_volume_snapshot'      => (float) $rabItem->volume,
+            // Also explicitly update the raw unit_price column to keep DB consistent
+            'unit_price'                      => (float) $rabItem->unit_price * (1 - RapSetting::resolvePajak($rapItem->category->project_id ?? 0) / 100),
         ]);
 
         $rapItem->refresh();

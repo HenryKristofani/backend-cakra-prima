@@ -28,17 +28,17 @@ class RapCategoryController extends Controller
 
         $appendFields = function ($category) use (&$appendFields, $pajak) {
             if ($category->relationLoaded('items')) {
-                $category->items = $category->items->map(function ($item) use ($pajak) {
-                    $effectiveUnitPrice = (float) $item->unit_price * (1 + $pajak / 100);
-                    $totalPrice         = (float) $item->volume * $effectiveUnitPrice;
+                $category->items = $category->items->map(function ($item) {
+                    $effectiveUnitPrice = (float) $item->effective_unit_price;
+                    $totalPrice         = (float) $item->total_price;
                     $totalRealisasi     = (float) $item->transactions->sum('expense');
                     
                     $item->setAttribute('effective_unit_price', round($effectiveUnitPrice, 2));
                     $item->setAttribute('total_price', round($totalPrice, 2));
                     $item->setAttribute('total_realisasi', round($totalRealisasi, 2));
                     $item->setAttribute('selisih_laba_rugi', round($totalPrice - $totalRealisasi, 2));
-                    $item->setAttribute('pajak_percentage', $pajak);
-                    
+                    // Keep pajak_percentage on the item for frontend info if needed
+                    $item->setAttribute('pajak_percentage', \App\Models\RapSetting::resolvePajak($item->category->project_id ?? 0));
                     return $item;
                 });
             }

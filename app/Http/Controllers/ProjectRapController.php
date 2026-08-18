@@ -59,6 +59,8 @@ class ProjectRapController extends Controller
             // Map old category ID to new category ID
             $categoryIdMap = [];
 
+            $pajak = \App\Models\RapSetting::resolvePajak($project->id);
+
             // 1. Create categories (flattened or nested doesn't matter much if we re-map parent_id correctly, but RabCategory can be nested)
             // Let's iterate in a way that respects hierarchy (parents first).
             // Usually, parent_id is smaller or inserted first.
@@ -143,6 +145,8 @@ class ProjectRapController extends Controller
             $rabCatsForNew = RabCategory::whereIn('id', $rabCatIds)
                 ->get()
                 ->sortBy('parent_id'); // ensure parents processed before children
+
+            $pajak = \App\Models\RapSetting::resolvePajak($project->id);
 
             foreach ($rabCatsForNew as $rabCategory) {
                 // Find or auto-create the matching rap_category
@@ -276,7 +280,7 @@ class ProjectRapController extends Controller
         $pajak = RapSetting::resolvePajak($project->id);
 
         $items = RapItem::whereHas('category', fn ($q) => $q->where('project_id', $project->id))
-            ->with('category')
+            ->with(['category', 'sourceRabItem', 'transactions'])
             ->get();
 
         $totalRencana   = 0.0;
