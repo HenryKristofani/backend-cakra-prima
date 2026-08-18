@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
     Route::get('projects/{project}/rab-summary', [App\Http\Controllers\ProjectRabSummaryController::class, '__invoke']);
     Route::get('projects/{project}/rab-export', [App\Http\Controllers\ProjectRabSummaryController::class, 'exportExcel']);
+    Route::get('projects/{project}/rap/export-excel', [App\Http\Controllers\ProjectRapController::class, 'exportExcel']);
+    Route::get('projects/{project}/rap/export-pdf', [App\Http\Controllers\ProjectRapController::class, 'exportPdf']);
     Route::post('projects/{project}/transactions/bulk', [TransactionController::class, 'bulkStore']);
     Route::post('projects/{project}/transactions', [TransactionController::class, 'storeNested']);
     Route::post('transactions/bulk', [TransactionController::class, 'bulkStoreGlobal']);

@@ -450,4 +450,42 @@ class ProjectRapController extends Controller
         // Deduplicate (same date might appear if $to falls inside a period)
         return array_values(array_unique($dates));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // EXPORTS (EXCEL & PDF)
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    private function getExportData(Project $project)
+    {
+        $categories = app(RapCategoryController::class)->index($project);
+        
+        return [
+            'categories' => $categories->toArray(),
+        ];
+    }
+
+    public function exportExcel(Project $project, Request $request)
+    {
+        $data = $this->getExportData($project);
+        $filename = 'RAP-' . \Illuminate\Support\Str::slug($project->name) . '-' . now()->format('Ymd') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ProjectRapExport($data, $project), 
+            $filename
+        );
+    }
+
+    public function exportPdf(Project $project, Request $request)
+    {
+        $data = $this->getExportData($project);
+        $filename = 'RAP-' . \Illuminate\Support\Str::slug($project->name) . '-' . now()->format('Ymd') . '.pdf';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.rap', [
+            'data' => $data,
+            'project' => $project,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
+    }
 }

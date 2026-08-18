@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class Project extends Model
 {
     protected $fillable = [
+        'kegiatan',
         'name',
         'status',
         'location',

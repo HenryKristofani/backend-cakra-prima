@@ -86,6 +86,7 @@ class ProjectController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'kegiatan' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
             'status' => 'nullable|in:aktif,nonaktif',
             'location' => 'nullable|string|max:255',
@@ -94,6 +95,7 @@ class ProjectController extends Controller
         ]);
 
         $project = Project::create([
+            'kegiatan' => $validated['kegiatan'] ?? null,
             'name' => $validated['name'],
             'status' => $validated['status'] ?? 'aktif',
             'location' => $validated['location'] ?? null,
@@ -166,6 +168,7 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project): JsonResponse
     {
         $validated = $request->validate([
+            'kegiatan' => 'nullable|string|max:255',
             'name' => 'sometimes|string|max:255',
             'status' => 'sometimes|in:aktif,nonaktif',
             'location' => 'nullable|string|max:255',
