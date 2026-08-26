@@ -362,6 +362,7 @@ class TransactionController extends Controller
             $createdGlobal = \Illuminate\Support\Facades\DB::transaction(function () use ($batchGlobal) {
                 $results = [];
                 foreach ($batchGlobal as $itemData) {
+                    unset($itemData['company']);
                     $trx = Transaction::create($itemData);
                     $trx->load(['project', 'account', 'user', 'rapItem:id,description']);
                     $results[] = $trx;
@@ -449,6 +450,7 @@ class TransactionController extends Controller
                     $transaction = Transaction::findOrFail($itemData['id']);
                     $updateData = $itemData;
                     unset($updateData['id']);
+                    unset($updateData['company']);
                     
                     $transaction->update($updateData);
                     $transaction->load(['project', 'account', 'user', 'rapItem:id,description']);
@@ -485,6 +487,8 @@ class TransactionController extends Controller
             }
         }
 
+        \Illuminate\Support\Facades\Log::info("DELETE Transaction Hit", ['id' => $id, 'project_id' => $projectId, 'is_isolated' => $isIsolated]);
+
         if ($isIsolated) {
             $transaction = ProjectKasTransaction::findOrFail($id);
             $transaction->delete();
@@ -493,7 +497,8 @@ class TransactionController extends Controller
             $transaction->delete();
         }
         
-        return response()->noContent();
+        \Illuminate\Support\Facades\Log::info("DELETE Transaction Success", ['id' => $id]);
+        return response()->json(['message' => 'Berhasil dihapus'], 200);
     }
 
     #[OA\Get(
@@ -625,4 +630,124 @@ class TransactionController extends Controller
             $filename
         );
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // POST /transactions/import/preview
+    // Parse uploaded file, validate rows, return preview WITHOUT inserting to DB
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file'   => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'format' => 'nullable|string|in:new,legacy',
+        ]);
+
+        $format = $request->input('format', 'new');
+
+        if ($format === 'legacy') {
+            $request->validate([
+                'project_id'      => 'nullable|integer|exists:projects,id',
+                'cash_account_id' => 'nullable|integer|exists:accounts,id',
+                'rek_account_id'  => 'nullable|integer|exists:accounts,id',
+            ]);
+
+            $project = $request->filled('project_id') ? Project::find($request->input('project_id')) : null;
+            
+            $import = new \App\Imports\LegacyTransactionImport(
+                $request->input('project_id'),
+                $request->input('cash_account_id'),
+                $request->input('rek_account_id'),
+                $project ? $project->is_isolated_cash : false
+            );
+        } else {
+            $import = new \App\Imports\TransactionImport();
+        }
+
+        Excel::import($import, $request->file('file'));
+
+        $rows = $import->getParsedRows();
+        $validCount   = count(array_filter($rows, fn($r) => $r['is_valid']));
+        $errorCount   = count($rows) - $validCount;
+
+        return response()->json([
+            'rows'          => $rows,
+            'total_rows'    => count($rows),
+            'valid_count'   => $validCount,
+            'error_count'   => $errorCount,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // POST /transactions/import/confirm
+    // Receive array of validated row data, insert to correct table
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public function importConfirm(Request $request)
+    {
+        $request->validate([
+            'rows'                  => 'required|array|min:1',
+            'rows.*.date'           => 'required|date',
+            'rows.*.description'    => 'required|string',
+            'rows.*.payment_method' => 'required|in:cash,rek',
+            'rows.*.income'         => 'nullable|numeric|min:0',
+            'rows.*.expense'        => 'nullable|numeric|min:0',
+            'rows.*.account_id'     => 'nullable|integer|exists:accounts,id',
+            'rows.*.project_id'     => 'nullable|integer|exists:projects,id',
+            'rows.*.rap_item_id'    => 'nullable|integer|exists:rap_items,id',
+            'rows.*.company'        => 'nullable|string',
+            'rows.*._is_isolated'   => 'nullable|boolean',
+        ]);
+
+        $batchIsolated = [];
+        $batchGlobal   = [];
+
+        foreach ($request->rows as $rowData) {
+            $isIsolated = (bool) ($rowData['_is_isolated'] ?? false);
+
+            // Sanitise the row – remove internal flag before insert
+            $insertData = collect($rowData)->except(['_is_isolated'])->all();
+            $insertData['user_id'] = $request->user()?->id ?? 1;
+
+            if ($isIsolated) {
+                // account_id is irrelevant for isolated kas
+                unset($insertData['account_id']);
+                $batchIsolated[] = $insertData;
+            } else {
+                // company does not exist in transactions table
+                unset($insertData['company']);
+                $batchGlobal[] = $insertData;
+            }
+        }
+
+        $createdCount = 0;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($batchIsolated, $batchGlobal, &$createdCount) {
+            foreach ($batchIsolated as $itemData) {
+                ProjectKasTransaction::create($itemData);
+                $createdCount++;
+            }
+            foreach ($batchGlobal as $itemData) {
+                Transaction::create($itemData);
+                $createdCount++;
+            }
+        });
+
+        return response()->json([
+            'message'       => "{$createdCount} transaksi berhasil diimport",
+            'imported_count'=> $createdCount,
+        ], 201);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // GET /transactions/import/template
+    // Download a blank import template (.xlsx) showing the correct column structure
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public function importTemplate()
+    {
+        $filename = 'template-import-kas.xlsx';
+        return Excel::download(new \App\Exports\TransactionImportTemplate(), $filename);
+    }
 }
+

@@ -54,6 +54,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('transactions-summary', [TransactionController::class, 'summary']);
     
     Route::get('transactions-export', [TransactionController::class, 'exportExcel']);
+    Route::get('transactions/import/template', [TransactionController::class, 'importTemplate']);
+    Route::post('transactions/import/preview', [TransactionController::class, 'importPreview']);
+    Route::post('transactions/import/confirm', [TransactionController::class, 'importConfirm']);
+
     
     Route::resource('debt-groups', DebtGroupController::class);
     Route::get('debt-groups/{debtGroup}/export', [DebtGroupController::class, 'export'])->name('debt-groups.export');
