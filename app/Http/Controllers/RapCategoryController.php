@@ -33,10 +33,10 @@ class RapCategoryController extends Controller
                     $totalPrice         = (float) $item->total_price;
                     $totalRealisasi     = (float) $item->transactions->sum('expense');
                     
-                    $item->setAttribute('effective_unit_price', round($effectiveUnitPrice, 2));
-                    $item->setAttribute('total_price', round($totalPrice, 2));
-                    $item->setAttribute('total_realisasi', round($totalRealisasi, 2));
-                    $item->setAttribute('selisih_laba_rugi', round($totalPrice - $totalRealisasi, 2));
+                    $item->setAttribute('effective_unit_price', $effectiveUnitPrice);
+                    $item->setAttribute('total_price', $totalPrice);
+                    $item->setAttribute('total_realisasi', $totalRealisasi);
+                    $item->setAttribute('selisih_laba_rugi', $totalPrice - $totalRealisasi);
                     // Keep pajak_percentage on the item for frontend info if needed
                     $item->setAttribute('pajak_percentage', \App\Models\RapSetting::resolvePajak($item->category->project_id ?? 0));
                     return $item;

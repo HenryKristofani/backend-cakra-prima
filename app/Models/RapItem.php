@@ -22,8 +22,10 @@ class RapItem extends Model
 
     protected $casts = [
         'volume'     => 'float',
-        // Note: unit_price is NOT cast here because we have a getUnitPriceAttribute accessor
-        // that handles the on-the-fly calculation for RAB-sourced items.
+        // unit_price serialized as string to preserve full DECIMAL(24,10) precision.
+        // JS Number is only safe to ~15-17 significant digits; sending as string
+        // prevents silent precision loss when the client parses the JSON.
+        // Note: unit_price accessor still handles on-the-fly calculation for RAB-sourced items.
     ];
 
     // ─── Relationships ──────────────────────────────────────────────────────────
@@ -76,8 +78,7 @@ class RapItem extends Model
     {
         if ($this->source_rab_item_id) {
             // For RAB-sourced items, unit_price in DB is already RAB - pajak%.
-            // Return the raw DB value to avoid applying pajak again.
-            return round((float) $this->getRawOriginal('unit_price'), 2);
+            return (float) $this->getRawOriginal('unit_price');
         }
 
         $projectId = $this->category ? $this->category->project_id : null;
@@ -87,15 +88,31 @@ class RapItem extends Model
 
         $pajak = \App\Models\RapSetting::resolvePajak($projectId);
 
-        return round((float) $this->getRawOriginal('unit_price') * (1 - $pajak / 100), 2);
+        return (float) $this->getRawOriginal('unit_price') * (1 - $pajak / 100);
     }
 
     /**
-     * total_price = volume × effective_unit_price
+     * total_price = volume × effective_unit_price (bcmath for full precision)
      */
-    public function getTotalPriceAttribute(): float
+    public function getTotalPriceAttribute(): string
     {
-        return (float) $this->volume * $this->effective_unit_price;
+        $volume = (string) $this->volume;
+        $price  = (string) $this->getRawOriginal('unit_price');
+
+        // For RAB-sourced items the stored unit_price is already rab_price * (1 - pajak/100)
+        // (written by migration/sync), so just multiply volume × stored price.
+        // For manual items use the effective unit price accessor.
+        if (!$this->source_rab_item_id) {
+            $projectId = $this->category ? $this->category->project_id : null;
+            if ($projectId) {
+                $pajak = \App\Models\RapSetting::resolvePajak($projectId);
+                // price * (1 - pajak/100)
+                $factor = bcsub('1', bcdiv((string) $pajak, '100', 12), 12);
+                $price  = bcmul($price, $factor, 12);
+            }
+        }
+
+        return bcmul($volume, $price, 10);
     }
 
     /**

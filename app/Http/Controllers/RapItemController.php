@@ -135,9 +135,9 @@ class RapItemController extends Controller
     {
         $arr = $item->toArray();
         $arr['effective_unit_price']   = $item->effective_unit_price;
-        $arr['total_price']            = round($item->total_price, 2);
-        $arr['total_realisasi']        = round($item->total_realisasi, 2);
-        $arr['selisih_laba_rugi']      = round($item->selisih_laba_rugi, 2);
+        $arr['total_price']            = $item->total_price;
+        $arr['total_realisasi']        = $item->total_realisasi;
+        $arr['selisih_laba_rugi']      = $item->selisih_laba_rugi;
         $arr['pajak_percentage']       = $pajak;
 
         return $arr;

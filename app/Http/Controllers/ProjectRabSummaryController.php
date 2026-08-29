@@ -9,10 +9,14 @@ class ProjectRabSummaryController extends Controller
 {
     public function __invoke(Project $project, Request $request)
     {
-        $totalActive = (float) $project->rabItems()
+        $activeItems = $project->rabItems()
             ->whereIn('status', ['aktif', 'dikurangi'])
-            ->get()
-            ->sum(fn ($item) => (float) $item->total_price);
+            ->get();
+        $totalActive = '0';
+        foreach ($activeItems as $item) {
+            $totalActive = bcadd($totalActive, (string) $item->total_price, 10);
+        }
+        $totalActive = (float) $totalActive;
 
         $rootCategories = \App\Models\RabCategory::where('project_id', $project->id)
             ->whereNull('parent_id')
@@ -30,14 +34,18 @@ class ProjectRabSummaryController extends Controller
             return $this->buildCategoryPayload($category, $totalActive, $overallTotalPercentage);
         })->values();
 
-        $totalDeduction = $deductions->sum(fn ($item) => (float) $item->total_price);
+        $totalDeduction = '0';
+        foreach ($deductions as $d) {
+            $totalDeduction = bcadd($totalDeduction, (string) $d->total_price, 10);
+        }
+        $totalDeduction = (float) $totalDeduction;
         $finalTotal = $totalActive - $totalDeduction;
         $roundedTotal = ceil($finalTotal / 1000) * 1000;
 
         return response()->json([
             'total_rab_aktif' => (float) $totalActive,
-            'total_deduction' => round($totalDeduction, 2),
-            'final_total' => round($finalTotal, 2),
+            'total_deduction' => $totalDeduction,
+            'final_total' => $finalTotal,
             'rounded_total' => (float) $roundedTotal,
             'overall_progress_percentage' => round($overallTotalPercentage, 2),
             'categories' => $resultCats,

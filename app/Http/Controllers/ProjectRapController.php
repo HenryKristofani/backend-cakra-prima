@@ -310,13 +310,13 @@ class ProjectRapController extends Controller
             ];
         });
 
-        $totalSelisih = round($totalRencana - $totalRealisasi, 2);
+        $totalSelisih = $totalRencana - $totalRealisasi;
 
         return response()->json([
             'items'   => $rows->values(),
             'summary' => [
-                'total_rencana'         => round($totalRencana, 2),
-                'total_realisasi'       => round($totalRealisasi, 2),
+                'total_rencana'         => $totalRencana,
+                'total_realisasi'       => $totalRealisasi,
                 'total_selisih'         => $totalSelisih,
                 'status_label'          => match (true) {
                     $totalSelisih > 0 => 'untung',

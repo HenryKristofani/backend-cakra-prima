@@ -19,8 +19,11 @@ class RabItem extends Model
     ];
 
     protected $casts = [
-        'volume' => 'float',
-        'unit_price' => 'float',
+        'volume'     => 'float',
+        // unit_price serialized as string to preserve full DECIMAL(24,10) precision.
+        // JS Number is only safe to ~15-17 significant digits; sending as string
+        // prevents silent precision loss when the client parses the JSON.
+        'unit_price' => 'string',
     ];
 
     public function category(): BelongsTo
@@ -33,10 +36,13 @@ class RabItem extends Model
         return $this->hasMany(ProgressReport::class, 'rab_item_id');
     }
 
-    // Accessor: total_price = volume * unit_price
+    // Accessor: total_price = volume * unit_price (as string to prevent JS float loss)
     public function getTotalPriceAttribute()
     {
-        return (float) $this->volume * (float) $this->unit_price;
+        // Use BC Math for full precision arithmetic
+        $v = (string) $this->volume;
+        $p = (string) $this->getRawOriginal('unit_price');
+        return bcmul($v, $p, 10);
     }
 
     // Accessor: latest_progress_percentage (0 if none)

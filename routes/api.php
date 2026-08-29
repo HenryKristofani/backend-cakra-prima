@@ -144,4 +144,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // RAP global setting
     Route::get('rap-setting/global', [RapSettingController::class, 'showGlobal']);
     Route::put('rap-setting/global', [RapSettingController::class, 'updateGlobal']);
+    
+    // RAB Excel Import Routes
+    Route::post('projects/{project}/rab/import/upload', [\App\Http\Controllers\RabImportController::class, 'upload']);
+    Route::post('projects/{project}/rab/import/preview', [\App\Http\Controllers\RabImportController::class, 'preview']);
+    Route::post('projects/{project}/rab/import/process', [\App\Http\Controllers\RabImportController::class, 'process']);
+    Route::get('projects/{project}/rab/import/status/{batchId}', [\App\Http\Controllers\RabImportController::class, 'status']);
 });

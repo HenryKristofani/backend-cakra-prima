@@ -108,19 +108,23 @@ class RabItemController extends Controller
     {
         $items->each(fn ($item) => $item->load('progressReports'));
 
-        $totalActive = (float) $rabCategory->project->rabItems()
+        $activeItems = $rabCategory->project->rabItems()
             ->whereIn('status', ['aktif', 'dikurangi'])
-            ->get()
-            ->sum(fn ($i) => (float) $i->total_price);
+            ->get();
+        $totalActive = '0';
+        foreach ($activeItems as $i) {
+            $totalActive = bcadd($totalActive, (string) $i->total_price, 10);
+        }
+        $totalActive = (float) $totalActive;
 
         return $items->map(function ($item) use ($totalActive) {
-            $totalPrice = (float) $item->total_price;
+            $totalPrice = (string) $item->total_price;
             $latest = (float) $item->latest_progress_percentage;
             $bobot = 0.0;
             $totalPercentage = 0.0;
 
             if ($totalActive > 0) {
-                $bobot = round(($totalPrice / $totalActive) * 100.0, 2);
+                $bobot = round(((float) $totalPrice / $totalActive) * 100.0, 2);
             }
 
             if ($item->status === 'aktif' && $totalActive > 0) {
