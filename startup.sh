@@ -21,5 +21,8 @@ EOF
 
 chmod -R 775 /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache
 
-service nginx start || service nginx reload
-service php8.3-fpm start || php-fpm8.3 -D
+# Jalankan PHP-FPM di background
+/usr/local/sbin/php-fpm -D
+
+# Jalankan Nginx di foreground (biar container tetap "hidup")
+nginx -g "daemon off;"
