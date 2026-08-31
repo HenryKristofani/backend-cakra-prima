@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Pastikan tidak ada proses nginx/php-fpm lama yang masih nyangkut
 pkill -f nginx || true
 pkill -f php-fpm || true
 sleep 2
@@ -12,23 +11,20 @@ server {
     index index.php index.html;
 
     location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+        try_files $uri $uri/ /index.php?$query_string;
     }
 
-    location ~ \.php\$ {
-        fastcgi_split_path_info ^(.+\.php)(/.+)\$;
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
         fastcgi_pass 127.0.0.1:9000;
         fastcgi_index index.php;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
     }
 }
 EOF
 
 chmod -R 775 /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache
 
-# Jalankan PHP-FPM di background
 /usr/local/sbin/php-fpm -D
-
-# Jalankan Nginx di foreground
 nginx -g "daemon off;"
