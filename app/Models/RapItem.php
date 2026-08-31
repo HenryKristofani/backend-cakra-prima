@@ -48,47 +48,60 @@ class RapItem extends Model
     // ─── Accessors ───────────────────────────────────────────────────────────────
 
     /**
+     * resolvedUnitPrice
+     *
+     * Satu-satunya sumber kebenaran untuk harga dasar RAP.
+     * - Item RAB-sourced: harga dikalkulasi on-the-fly (sudah dipotong pajak) jika relasi tersedia, 
+     *   atau mengambil raw DB jika relasi tidak ada.
+     * - Item Manual: selalu mengambil nilai raw DB (belum dipotong pajak).
+     */
+    protected function resolvedUnitPrice(): string
+    {
+        $rawPrice = (string) $this->getRawOriginal('unit_price');
+
+        if ($this->source_rab_item_id) {
+            if ($this->relationLoaded('sourceRabItem') && $this->sourceRabItem) {
+                $projectId = $this->category ? $this->category->project_id : null;
+                if ($projectId) {
+                    $pajakPct = \App\Models\RapSetting::resolvePajak($projectId);
+                    $factor   = bcsub('1', bcdiv((string) $pajakPct, '100', 12), 12);
+                    return bcmul((string) $this->sourceRabItem->unit_price, $factor, 12);
+                }
+            }
+            return $rawPrice;
+        }
+
+        return $rawPrice;
+    }
+
+    /**
      * getUnitPriceAttribute
-     * 
-     * If this is a RAB-sourced item, override the unit_price returned from the database
-     * by calculating it on-the-fly: source_rab_item.unit_price * (1 - pajak% / 100).
-     * Requires sourceRabItem and category relations to be loaded.
      */
     public function getUnitPriceAttribute($value)
     {
-        if ($this->source_rab_item_id && $this->relationLoaded('sourceRabItem') && $this->sourceRabItem) {
-            $projectId = $this->category ? $this->category->project_id : null;
-            if ($projectId) {
-                $pajakPct = \App\Models\RapSetting::resolvePajak($projectId);
-                return (float) $this->sourceRabItem->unit_price * (1 - $pajakPct / 100);
-            }
-        }
-        return (float) $value;
+        return (float) $this->resolvedUnitPrice();
     }
 
     /**
      * effective_unit_price
-     *
-     * For RAB-sourced items: tax is already baked into the stored unit_price column.
-     * Returning effective_unit_price = stored unit_price (raw DB value) avoids double-deduction.
-     *
-     * For manual items: apply the standard formula unit_price × (1 - pajak% / 100).
      */
     public function getEffectiveUnitPriceAttribute(): float
     {
+        $price = $this->resolvedUnitPrice();
+
         if ($this->source_rab_item_id) {
-            // For RAB-sourced items, unit_price in DB is already RAB - pajak%.
-            return (float) $this->getRawOriginal('unit_price');
+            // Untuk RAB-sourced, resolvedUnitPrice sudah dalam bentuk harga efektif (setelah pajak)
+            return (float) $price;
         }
 
+        // Untuk manual items: potong pajak
         $projectId = $this->category ? $this->category->project_id : null;
         if (!$projectId) {
-            return (float) $this->getRawOriginal('unit_price');
+            return (float) $price;
         }
 
         $pajak = \App\Models\RapSetting::resolvePajak($projectId);
-
-        return (float) $this->getRawOriginal('unit_price') * (1 - $pajak / 100);
+        return (float) $price * (1 - $pajak / 100);
     }
 
     /**
@@ -97,16 +110,12 @@ class RapItem extends Model
     public function getTotalPriceAttribute(): string
     {
         $volume = (string) $this->volume;
-        $price  = (string) $this->getRawOriginal('unit_price');
+        $price  = $this->resolvedUnitPrice();
 
-        // For RAB-sourced items the stored unit_price is already rab_price * (1 - pajak/100)
-        // (written by migration/sync), so just multiply volume × stored price.
-        // For manual items use the effective unit price accessor.
         if (!$this->source_rab_item_id) {
             $projectId = $this->category ? $this->category->project_id : null;
             if ($projectId) {
-                $pajak = \App\Models\RapSetting::resolvePajak($projectId);
-                // price * (1 - pajak/100)
+                $pajak  = \App\Models\RapSetting::resolvePajak($projectId);
                 $factor = bcsub('1', bcdiv((string) $pajak, '100', 12), 12);
                 $price  = bcmul($price, $factor, 12);
             }
