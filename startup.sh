@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# Pastikan tidak ada proses nginx/php-fpm lama yang masih nyangkut
+pkill -f nginx || true
+pkill -f php-fpm || true
+sleep 2
+
 cat <<'EOF' > /etc/nginx/sites-available/default
 server {
     listen 8080;
@@ -24,5 +30,5 @@ chmod -R 775 /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache
 # Jalankan PHP-FPM di background
 /usr/local/sbin/php-fpm -D
 
-# Jalankan Nginx di foreground (biar container tetap "hidup")
+# Jalankan Nginx di foreground
 nginx -g "daemon off;"
