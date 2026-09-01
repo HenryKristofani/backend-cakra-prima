@@ -29,10 +29,12 @@ class AuthTest extends TestCase
             'password' => 'password123',
         ]);
 
+        // Token-based: response harus mengandung token dan user
         $response->assertStatus(200)
-                 ->assertJsonStructure(['message', 'user']);
-                 
-        $this->assertAuthenticatedAs($this->user);
+                 ->assertJsonStructure(['message', 'token', 'user']);
+
+        // Pastikan token yang dikembalikan adalah string non-empty
+        $this->assertNotEmpty($response->json('token'));
     }
 
     public function test_user_cannot_login_with_incorrect_password()
@@ -102,14 +104,19 @@ class AuthTest extends TestCase
 
     public function test_protected_routes_require_authentication()
     {
-        // Try accessing a protected route without login
-        $response = $this->withHeaders(['Referer' => 'http://localhost:3000'])->getJson('/api/projects');
+        // Tanpa token → 401
+        $response = $this->getJson('/api/projects');
         $response->assertStatus(401);
 
-        // Login and try again
-        $this->actingAs($this->user);
-        
-        $response = $this->withHeaders(['Referer' => 'http://localhost:3000'])->getJson('/api/projects');
+        // Login dulu untuk dapat token
+        $loginResponse = $this->postJson('/api/login', [
+            'email'    => 'test@example.com',
+            'password' => 'password123',
+        ]);
+        $token = $loginResponse->json('token');
+
+        // Akses protected route dengan Bearer token → 200
+        $response = $this->withToken($token)->getJson('/api/projects');
         $response->assertStatus(200);
     }
 }

@@ -13,10 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();
-    })
-    ->withMiddleware(function (Middleware $middleware) {
-    $middleware->trustProxies(at: '*');
+        // Token-based auth: tidak perlu statefulApi() maupun trustProxies
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     /**
-     * Authenticate the user and create a session.
+     * Authenticate the user and return a Sanctum API token.
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -25,42 +27,39 @@ class AuthController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return response()->json([
-                'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik."
+                'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
             ], 429);
         }
 
-        if (Auth::attempt($request->only('email', 'password'))) {
-            // Login successful
-            RateLimiter::clear($throttleKey);
-            $request->session()->regenerate();
+        $user = User::where('email', $request->email)->first();
 
-            return response()->json([
-                'message' => 'Login berhasil',
-                'user' => Auth::user(),
-            ]);
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($throttleKey, 60);
+            return response()->json(['message' => 'Kredensial tidak valid'], 401);
         }
 
-        // Login failed
-        RateLimiter::hit($throttleKey, 60);
+        RateLimiter::clear($throttleKey);
+
+        // Revoke semua token lama supaya tidak terjadi akumulasi token
+        $user->tokens()->delete();
+
+        $token = $user->createToken('spa-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Kredensial tidak valid',
-        ], 401);
+            'message' => 'Login berhasil',
+            'token'   => $token,
+            'user'    => $user,
+        ]);
     }
 
     /**
-     * Log the user out of the application.
+     * Revoke the current access token (logout).
      */
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
+        $request->user()->currentAccessToken()->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json([
-            'message' => 'Logout berhasil'
-        ]);
+        return response()->json(['message' => 'Logout berhasil']);
     }
 
     /**
