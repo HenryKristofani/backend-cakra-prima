@@ -2814,6 +2814,34 @@
                 }
             }
         },
+        "/api/projects/{project}/transactions": {
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Tambah transaksi nested untuk project",
+                "operationId": "d46f9231062ee70eb02d971ab3d71642",
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/api/projects/{project}/transactions/bulk": {
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Tambah transaksi nested untuk project secara bulk",
+                "operationId": "60698b3e61c4f73fe96407eac98e5051",
+                "responses": {
+                    "201": {
+                        "description": "Berhasil dibuat"
+                    }
+                }
+            }
+        },
         "/api/transactions/{id}": {
             "put": {
                 "tags": [
@@ -2897,6 +2925,32 @@
                 "responses": {
                     "204": {
                         "description": "Berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/api/transactions/bulk": {
+            "put": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Update transaksi secara bulk",
+                "operationId": "71c7694ddc5b1076f716985ae7a7a1a8",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil diupdate"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Tambah banyak transaksi sekaligus (Global)",
+                "operationId": "517120938292359cb006c32b9336804d",
+                "responses": {
+                    "201": {
+                        "description": "Berhasil"
                     }
                 }
             }
