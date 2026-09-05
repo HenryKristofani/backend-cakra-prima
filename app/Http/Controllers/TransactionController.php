@@ -79,8 +79,8 @@ class TransactionController extends Controller
         }
 
         // Step 5: Manually paginate the in-memory collection
-        $perPage = 5;
-        $currentPage = $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 10);
+        $currentPage = (int) $request->input('page', 1);
         $total = $allTransactions->count();
         $items = $allTransactions->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
