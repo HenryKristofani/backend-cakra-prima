@@ -78,7 +78,23 @@ class TransactionController extends Controller
             })->values();
         }
 
-        // Step 5: Manually paginate the in-memory collection
+        // Step 5: Apply sort (AFTER running balance, AFTER filters)
+        $sortBy = $request->input('sort_by', 'date'); // 'date' or 'updated_at'
+        $sortDir = $request->input('sort_dir', 'asc'); // 'asc' or 'desc'
+
+        if ($sortBy === 'updated_at') {
+            $allTransactions = $sortDir === 'desc'
+                ? $allTransactions->sortByDesc(fn($t) => $t->updated_at)->values()
+                : $allTransactions->sortBy(fn($t) => $t->updated_at)->values();
+        } else {
+            // Default: sort by date (already in asc from DB, but respect sort_dir)
+            if ($sortDir === 'desc') {
+                $allTransactions = $allTransactions->sortByDesc(fn($t) => $t->date . $t->id)->values();
+            }
+            // asc is already the default from DB query
+        }
+
+        // Step 6: Manually paginate the in-memory collection
         $perPage = (int) $request->input('per_page', 10);
         $currentPage = (int) $request->input('page', 1);
         $total = $allTransactions->count();
