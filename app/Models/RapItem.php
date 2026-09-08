@@ -51,9 +51,9 @@ class RapItem extends Model
      * resolvedUnitPrice
      *
      * Satu-satunya sumber kebenaran untuk harga dasar RAP.
-     * - Item RAB-sourced: harga dikalkulasi on-the-fly (sudah dipotong pajak) jika relasi tersedia, 
+     * - Item RAB-sourced: harga dikalkulasi on-the-fly (sudah dipotong potongan%) jika relasi tersedia, 
      *   atau mengambil raw DB jika relasi tidak ada.
-     * - Item Manual: selalu mengambil nilai raw DB (belum dipotong pajak).
+     * - Item Manual: selalu mengambil nilai raw DB (belum dipotong potongan%).
      */
     protected function resolvedUnitPrice(): string
     {
@@ -63,8 +63,8 @@ class RapItem extends Model
             if ($this->relationLoaded('sourceRabItem') && $this->sourceRabItem) {
                 $projectId = $this->category ? $this->category->project_id : null;
                 if ($projectId) {
-                    $pajakPct = \App\Models\RapSetting::resolvePajak($projectId);
-                    $factor   = bcsub('1', bcdiv((string) $pajakPct, '100', 12), 12);
+                    $potonganPct = \App\Models\RapSetting::resolvePotongan($projectId);
+                    $factor   = bcsub('1', bcdiv((string) $potonganPct, '100', 12), 12);
                     return bcmul((string) $this->sourceRabItem->unit_price, $factor, 12);
                 }
             }
@@ -90,18 +90,18 @@ class RapItem extends Model
         $price = $this->resolvedUnitPrice();
 
         if ($this->source_rab_item_id) {
-            // Untuk RAB-sourced, resolvedUnitPrice sudah dalam bentuk harga efektif (setelah pajak)
+            // Untuk RAB-sourced, resolvedUnitPrice sudah dalam bentuk harga efektif (setelah potongan)
             return (float) $price;
         }
 
-        // Untuk manual items: potong pajak
+        // Untuk manual items: potong potongan
         $projectId = $this->category ? $this->category->project_id : null;
         if (!$projectId) {
             return (float) $price;
         }
 
-        $pajak = \App\Models\RapSetting::resolvePajak($projectId);
-        return (float) $price * (1 - $pajak / 100);
+        $potongan = \App\Models\RapSetting::resolvePotongan($projectId);
+        return (float) $price * (1 - $potongan / 100);
     }
 
     /**
@@ -115,8 +115,8 @@ class RapItem extends Model
         if (!$this->source_rab_item_id) {
             $projectId = $this->category ? $this->category->project_id : null;
             if ($projectId) {
-                $pajak  = \App\Models\RapSetting::resolvePajak($projectId);
-                $factor = bcsub('1', bcdiv((string) $pajak, '100', 12), 12);
+                $potongan  = \App\Models\RapSetting::resolvePotongan($projectId);
+                $factor = bcsub('1', bcdiv((string) $potongan, '100', 12), 12);
                 $price  = bcmul($price, $factor, 12);
             }
         }

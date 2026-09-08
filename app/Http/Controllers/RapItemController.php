@@ -13,9 +13,9 @@ class RapItemController extends Controller
 {
     public function index(RapCategory $rapCategory)
     {
-        $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
+        $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
 
-        return $rapCategory->items()->with('sourceRabItem:id,description,unit_price')->get()->map(fn ($item) => $this->appendCalculatedFields($item, $pajak));
+        return $rapCategory->items()->with('sourceRabItem:id,description,unit_price')->get()->map(fn ($item) => $this->appendCalculatedFields($item, $potongan));
     }
 
     public function store(Request $request, RapCategory $rapCategory)
@@ -82,14 +82,14 @@ class RapItemController extends Controller
                 'items.*.sort_order'  => 'nullable|integer',
             ]);
 
-            $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
+            $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
 
             $createdItems = collect();
             foreach ($validated['items'] as $itemData) {
                 $item = $rapCategory->items()->create($itemData);
                 $item->setRelation('category', $rapCategory);
                 $item->load('sourceRabItem:id,description,unit_price');
-                $createdItems->push($this->appendCalculatedFields($item, $pajak));
+                $createdItems->push($this->appendCalculatedFields($item, $potongan));
             }
 
             return response()->json($createdItems, 201);
@@ -109,7 +109,7 @@ class RapItemController extends Controller
                 'items.*.sort_order'  => 'nullable|integer',
             ]);
 
-            $pajak = RapSetting::resolvePajak((int) $rapCategory->project_id);
+            $potongan = RapSetting::resolvePotongan((int) $rapCategory->project_id);
 
             $updatedItems = collect();
             foreach ($validated['items'] as $itemData) {
@@ -122,7 +122,7 @@ class RapItemController extends Controller
                 $item->update($itemData);
                 $item->setRelation('category', $rapCategory);
                 $item->load('sourceRabItem:id,description,unit_price');
-                $updatedItems->push($this->appendCalculatedFields($item, $pajak));
+                $updatedItems->push($this->appendCalculatedFields($item, $potongan));
             }
 
             return response()->json($updatedItems, 200);
@@ -131,14 +131,14 @@ class RapItemController extends Controller
 
     // ─── Helper ─────────────────────────────────────────────────────────────────
 
-    private function appendCalculatedFields(RapItem $item, float $pajak): array
+    private function appendCalculatedFields(RapItem $item, float $potongan): array
     {
         $arr = $item->toArray();
-        $arr['effective_unit_price']   = $item->effective_unit_price;
-        $arr['total_price']            = $item->total_price;
-        $arr['total_realisasi']        = $item->total_realisasi;
-        $arr['selisih_laba_rugi']      = $item->selisih_laba_rugi;
-        $arr['pajak_percentage']       = $pajak;
+        $arr['effective_unit_price']      = $item->effective_unit_price;
+        $arr['total_price']               = $item->total_price;
+        $arr['total_realisasi']           = $item->total_realisasi;
+        $arr['selisih_laba_rugi']         = $item->selisih_laba_rugi;
+        $arr['potongan_percentage']       = $potongan;
 
         return $arr;
     }
@@ -172,7 +172,7 @@ class RapItemController extends Controller
             'source_rab_description_snapshot' => $rabItem->description,
             'source_rab_volume_snapshot'      => (float) $rabItem->volume,
             // Also explicitly update the raw unit_price column to keep DB consistent
-            'unit_price'                      => (float) $rabItem->unit_price * (1 - RapSetting::resolvePajak($rapItem->category->project_id ?? 0) / 100),
+            'unit_price'                      => (float) $rabItem->unit_price * (1 - RapSetting::resolvePotongan($rapItem->category->project_id ?? 0) / 100),
         ]);
 
         $rapItem->refresh();

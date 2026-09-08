@@ -59,7 +59,7 @@ class ProjectRapController extends Controller
             // Map old category ID to new category ID
             $categoryIdMap = [];
 
-            $pajak = \App\Models\RapSetting::resolvePajak($project->id);
+            $potongan = \App\Models\RapSetting::resolvePotongan($project->id);
 
             // 1. Create categories (flattened or nested doesn't matter much if we re-map parent_id correctly, but RabCategory can be nested)
             // Let's iterate in a way that respects hierarchy (parents first).
@@ -146,7 +146,7 @@ class ProjectRapController extends Controller
                 ->get()
                 ->sortBy('parent_id'); // ensure parents processed before children
 
-            $pajak = \App\Models\RapSetting::resolvePajak($project->id);
+            $potongan = \App\Models\RapSetting::resolvePotongan($project->id);
 
             foreach ($rabCatsForNew as $rabCategory) {
                 // Find or auto-create the matching rap_category
@@ -277,7 +277,7 @@ class ProjectRapController extends Controller
 
     public function labaRugi(Project $project)
     {
-        $pajak = RapSetting::resolvePajak($project->id);
+        $potongan = RapSetting::resolvePotongan($project->id);
 
         $items = RapItem::whereHas('category', fn ($q) => $q->where('project_id', $project->id))
             ->with(['category', 'sourceRabItem', 'transactions'])
@@ -315,15 +315,15 @@ class ProjectRapController extends Controller
         return response()->json([
             'items'   => $rows->values(),
             'summary' => [
-                'total_rencana'         => $totalRencana,
-                'total_realisasi'       => $totalRealisasi,
-                'total_selisih'         => $totalSelisih,
-                'status_label'          => match (true) {
+                'total_rencana'             => $totalRencana,
+                'total_realisasi'           => $totalRealisasi,
+                'total_selisih'             => $totalSelisih,
+                'status_label'              => match (true) {
                     $totalSelisih > 0 => 'untung',
                     $totalSelisih < 0 => 'rugi',
                     default           => 'impas',
                 },
-                'pajak_percentage'      => $pajak,
+                'potongan_percentage'       => $potongan,
             ],
         ]);
     }

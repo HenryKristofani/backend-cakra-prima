@@ -17,7 +17,7 @@ class RapItemAccessorTest extends TestCase
     private function createProjectWithItem(
         float $unitPrice,
         float $volume,
-        ?float $pajakPct,
+        ?float $potonganPct,
         bool $isGlobal = false,
     ): RapItem {
         $project = Project::create([
@@ -25,10 +25,10 @@ class RapItemAccessorTest extends TestCase
             'status' => 'active',
         ]);
 
-        if ($pajakPct !== null) {
+        if ($potonganPct !== null) {
             RapSetting::create([
                 'project_id'          => $isGlobal ? null : $project->id,
-                'pajak_percentage' => $pajakPct,
+                'potongan_percentage' => $potonganPct,
             ]);
         }
 
@@ -48,13 +48,13 @@ class RapItemAccessorTest extends TestCase
         ]);
     }
 
-    public function test_effective_unit_price_with_project_specific_pajak(): void
+    public function test_effective_unit_price_with_project_specific_potongan(): void
     {
-        // unit_price=100000, pajak=10%, expected effective=90000 (discount)
+        // unit_price=100000, potongan=10%, expected effective=90000 (discount)
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
-            pajakPct: 10.0,
+            potonganPct: 10.0,
         );
 
         $item->load('category');
@@ -67,7 +67,7 @@ class RapItemAccessorTest extends TestCase
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
-            pajakPct: 10.0,
+            potonganPct: 10.0,
         );
 
         $item->load('category');
@@ -80,7 +80,7 @@ class RapItemAccessorTest extends TestCase
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
-            pajakPct: 10.0,
+            potonganPct: 10.0,
         );
 
         \Illuminate\Support\Facades\DB::table('transactions')->insert([
@@ -105,7 +105,7 @@ class RapItemAccessorTest extends TestCase
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      5,
-            pajakPct: 10.0,
+            potonganPct: 10.0,
         );
 
         \Illuminate\Support\Facades\DB::table('transactions')->insert([
@@ -124,12 +124,12 @@ class RapItemAccessorTest extends TestCase
         $this->assertEquals(-200_000.0, $item->selisih_laba_rugi, 'selisih harus -200000 (rugi)');
     }
 
-    public function test_resolves_global_pajak_when_no_project_specific_setting(): void
+    public function test_resolves_global_potongan_when_no_project_specific_setting(): void
     {
         // Global 15%, no project-specific → harus pakai 15% → effective = 85000 (100000 × 0.85)
         RapSetting::create([
             'project_id'          => null,
-            'pajak_percentage' => 15.0,
+            'potongan_percentage' => 15.0,
         ]);
 
         $project  = Project::create(['name' => 'Project Tanpa Setting', 'status' => 'active']);
@@ -147,13 +147,13 @@ class RapItemAccessorTest extends TestCase
         $this->assertEquals(85_000.0, $item->effective_unit_price, 'Harus fallback ke global 15%');
     }
 
-    public function test_uses_zero_pajak_when_no_setting_exists(): void
+    public function test_uses_zero_potongan_when_no_setting_exists(): void
     {
         $project  = Project::create(['name' => 'Project Zero', 'status' => 'active']);
         $category = RapCategory::create(['project_id' => $project->id, 'name' => 'Cat', 'sort_order' => 0]);
         $item     = RapItem::create([
             'category_id' => $category->id,
-            'description' => 'Item zero pajak',
+            'description' => 'Item zero potongan',
             'volume'      => 1,
             'unit'        => 'ls',
             'unit_price'  => 200_000,
@@ -165,15 +165,15 @@ class RapItemAccessorTest extends TestCase
         $this->assertEquals(200_000.0, $item->total_price);
     }
 
-    public function test_project_specific_pajak_takes_priority_over_global(): void
+    public function test_project_specific_potongan_takes_priority_over_global(): void
     {
         // Global 20%, project-specific 5% → harus pakai 5% → effective = 95000 (100000 × 0.95)
-        RapSetting::create(['project_id' => null, 'pajak_percentage' => 20.0]);
+        RapSetting::create(['project_id' => null, 'potongan_percentage' => 20.0]);
 
         $item = $this->createProjectWithItem(
             unitPrice:   100_000,
             volume:      1,
-            pajakPct: 5.0,
+            potonganPct: 5.0,
             isGlobal:    false,
         );
 

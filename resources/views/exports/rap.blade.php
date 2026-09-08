@@ -11,7 +11,7 @@
         <tr>
             <th colspan="2" style="text-align: left; font-weight: bold;">KEGIATAN</th>
             <th colspan="4" style="text-align: left;">: {{ $project->kegiatan ?? '' }}</th>
-            <th colspan="2" style="text-align: right;">Pajak & Biaya Admin: {{ number_format(\App\Models\RapSetting::resolvePajak($project->id), 2) }}%</th>
+            <th colspan="2" style="text-align: right;">Potongan Harga: {{ number_format(\App\Models\RapSetting::resolvePotongan($project->id), 2) }}%</th>
         </tr>
         <tr>
             <th colspan="2" style="text-align: left; font-weight: bold;">PEKERJAAN</th>

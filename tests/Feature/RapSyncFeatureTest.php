@@ -296,7 +296,7 @@ class RapSyncFeatureTest extends TestCase
         $response->assertOk()
                  ->assertJsonPath('message', 'Berhasil di-sync dari RAB.');
 
-        // Expected unit_price = rab_item.unit_price * (1 - 0) = 5000 (since no pajak is set in this test)
+        // Expected unit_price = rab_item.unit_price * (1 - 0) = 5000 (since no potongan is set in this test)
         $this->assertDatabaseHas('rap_items', [
             'id'                              => $rapItem->id,
             'description'                     => 'Deskripsi Baru',
