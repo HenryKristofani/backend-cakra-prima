@@ -24,6 +24,10 @@ use App\Http\Controllers\RapCategoryController;
 use App\Http\Controllers\RapItemController;
 use App\Http\Controllers\RapSettingController;
 use App\Http\Controllers\ProjectRapController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\UnitController;
+
+use App\Http\Controllers\InventoryQueryController;
 
 // Public routes
 Route::post('login', [AuthController::class, 'login']);
@@ -150,4 +154,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('projects/{project}/rab/import/preview', [\App\Http\Controllers\RabImportController::class, 'preview']);
     Route::post('projects/{project}/rab/import/process', [\App\Http\Controllers\RabImportController::class, 'process']);
     Route::get('projects/{project}/rab/import/status/{batchId}', [\App\Http\Controllers\RabImportController::class, 'status']);
+
+    // Inventory Module
+    Route::get('/inventory/stock-transfers', [StockTransferController::class, 'index']);
+    Route::post('/inventory/stock-transfers', [StockTransferController::class, 'store']);
+    Route::get('/inventory/stock-usages', [StockTransferController::class, 'getUsages']);
+    Route::post('/inventory/stock-usages/{id}/post-to-kas', [StockTransferController::class, 'postToKas']);
+    
+    Route::post('/inventory/warehouses', [\App\Http\Controllers\WarehouseController::class, 'store']);
+    Route::get('/inventory/warehouses/{warehouse}', [\App\Http\Controllers\WarehouseController::class, 'show']);
+    Route::put('/inventory/warehouses/{warehouse}', [\App\Http\Controllers\WarehouseController::class, 'update']);
+    
+    Route::get('/inventory/units', [UnitController::class, 'index']);
+    Route::post('/inventory/units', [UnitController::class, 'store']);
+    Route::put('/inventory/units/{unit}', [UnitController::class, 'update']);
+
+    Route::post('/inventory/items', [\App\Http\Controllers\ItemController::class, 'store']);
+    Route::put('/inventory/items/{item}', [\App\Http\Controllers\ItemController::class, 'update']);
+    
+    // Inventory Queries
+    Route::get('/inventory/items', [InventoryQueryController::class, 'getItems']);
+    Route::get('/inventory/items/{id}', [InventoryQueryController::class, 'getItem']);
+    Route::get('/inventory/warehouses', [InventoryQueryController::class, 'getWarehouses']);
+    Route::get('/inventory/stock-balances', [InventoryQueryController::class, 'stockBalances']);
+    Route::get('/inventory/stock-moves', [InventoryQueryController::class, 'stockMoves']);
+    Route::get('/projects/{project}/stock-report', [InventoryQueryController::class, 'projectStockReport']);
 });
