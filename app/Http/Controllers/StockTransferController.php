@@ -76,7 +76,7 @@ class StockTransferController extends Controller
 
     public function getUsages(\Illuminate\Http\Request $request): JsonResponse
     {
-        $query = \App\Models\StockUsage::with(['item', 'warehouse', 'stockTransferLine.stockTransfer']);
+        $query = \App\Models\StockUsage::with(['item', 'warehouse.project', 'stockTransferLine.stockTransfer']);
 
         if ($request->has('warehouse_id')) {
             $query->where('warehouse_id', $request->query('warehouse_id'));
