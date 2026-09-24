@@ -26,17 +26,20 @@ use App\Http\Controllers\RapSettingController;
 use App\Http\Controllers\ProjectRapController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\UnitController;
-
 use App\Http\Controllers\InventoryQueryController;
+use App\Http\Controllers\FundSourceController;
+use App\Http\Controllers\FundMovementController;
 
 // Public routes
 Route::post('login', [AuthController::class, 'login']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class])->group(function () {
     
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);
+    Route::put('user/profile', [AuthController::class, 'updateProfile']);
+    Route::put('user/password', [AuthController::class, 'updatePassword']);
     
     Route::apiResource('accounts', AccountController::class);
     Route::put('projects/bulk', [ProjectController::class, 'bulkUpdate']);
@@ -179,4 +182,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/stock-balances', [InventoryQueryController::class, 'stockBalances']);
     Route::get('/inventory/stock-moves', [InventoryQueryController::class, 'stockMoves']);
     Route::get('/projects/{project}/stock-report', [InventoryQueryController::class, 'projectStockReport']);
+    
+    // Fund Sources & Movements
+    Route::get('fund-sources/{id}/breakdown', [\App\Http\Controllers\FundSourceController::class, 'breakdown']);
+    Route::apiResource('fund-sources', \App\Http\Controllers\FundSourceController::class)->only(['index', 'store', 'update']);
+    Route::apiResource('fund-movements', \App\Http\Controllers\FundMovementController::class)->only(['index', 'store']);
+    Route::post('fund-movements/{fundMovement}/reverse', [\App\Http\Controllers\FundMovementController::class, 'reverse']);
+    
+    Route::get('transactions-summary/by-fund-source', [TransactionController::class, 'summaryByFundSource']);
+    Route::get('projects/{project}/kas-breakdown-by-fund-source', [TransactionController::class, 'projectKasBreakdownByFundSource']);
+    
+    Route::get('projects/{project}/fund-sources', [\App\Http\Controllers\ProjectController::class, 'fundSources']);
 });

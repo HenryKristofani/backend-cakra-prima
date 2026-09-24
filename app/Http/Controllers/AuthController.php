@@ -77,4 +77,51 @@ class AuthController extends Controller
     {
         return Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
     }
+
+    /**
+     * Update the authenticated user's profile (name and email only).
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'  => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        // Secara eksplisit hanya update field yang di-whitelist (name, email)
+        // Pengguna TIDAK BISA update kolom 'role' dari endpoint ini.
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui',
+            'user'    => $user->fresh(),
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Password saat ini tidak valid.'], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'message' => 'Password berhasil diperbarui',
+        ]);
+    }
 }

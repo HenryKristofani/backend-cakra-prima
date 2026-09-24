@@ -507,11 +507,19 @@ class TransactionController extends Controller
 
         if ($isIsolated) {
             $transaction = ProjectKasTransaction::findOrFail($id);
-            $transaction->delete();
         } else {
             $transaction = Transaction::findOrFail($id);
-            $transaction->delete();
         }
+
+        if (!is_null($transaction->fund_movement_id)) {
+            $fm = \App\Models\FundMovement::find($transaction->fund_movement_id);
+            $ref = $fm ? $fm->reference_number : 'Unknown';
+            return response()->json([
+                'message' => "Transaksi ini berasal dari Fund Movement [{$ref}], tidak bisa dihapus langsung. Batalkan melalui halaman Sumber Modal."
+            ], 422);
+        }
+
+        $transaction->delete();
         
         \Illuminate\Support\Facades\Log::info("DELETE Transaction Success", ['id' => $id]);
         return response()->json(['message' => 'Berhasil dihapus'], 200);
@@ -567,6 +575,135 @@ class TransactionController extends Controller
             'pemasukan_bulan_ini' => (float) $pemasukan,
             'pengeluaran_bulan_ini' => (float) $pengeluaran,
             'total_saldo_cash' => (float) $cashIncome - (float) $cashExpense,
+        ]);
+    }
+
+    /**
+     * GET /transactions-summary/by-fund-source
+     *
+     * Breakdown of how much has been allocated (InitialAllocation) per fund source,
+     * restricted to NON-isolated projects only.
+     *
+     * Rationale: Total Saldo Kas is computed from the `transactions` table.
+     * Allocations to isolated-cash projects land in `project_kas_transactions`,
+     * not `transactions`, so they must NOT be counted here to keep the numbers
+     * consistent.
+     */
+    public function summaryByFundSource(): \Illuminate\Http\JsonResponse
+    {
+        // Total saldo kas = all of the `transactions` table (non-isolated projects only,
+        // since isolated ones write to project_kas_transactions instead)
+        $totalKas = (float) Transaction::sum('income') - (float) Transaction::sum('expense');
+
+        // Calculate InitialAllocation - Withdrawal per fund source, limited to non-isolated projects
+        $fundSources = \App\Models\FundSource::all();
+        $rows = $fundSources->map(function ($fs) use ($totalKas) {
+            $in = \App\Models\FundMovement::where('fund_source_id', $fs->id)
+                ->where('type', \App\Enums\FundMovementType::InitialAllocation->value)
+                ->whereHas('destinationProject', fn($q) => $q->where('is_isolated_cash', false))
+                ->sum('amount');
+
+            $out = \App\Models\FundMovement::where('fund_source_id', $fs->id)
+                ->where('type', \App\Enums\FundMovementType::Withdrawal->value)
+                ->whereHas('sourceProject', fn($q) => $q->where('is_isolated_cash', false))
+                ->sum('amount');
+
+            $allocated = (float)$in - (float)$out;
+
+            return [
+                'fund_source_id'    => $fs->id,
+                'fund_source_name'  => $fs->name,
+                'fund_source_type'  => $fs->type,
+                'initial_amount'    => (float) $fs->initial_amount,
+                'total_allocated'   => $allocated,
+                'percentage_of_kas' => $totalKas > 0 && $allocated > 0
+                    ? round(($allocated / $totalKas) * 100, 2)
+                    : 0,
+            ];
+        })
+        ->filter(fn($row) => $row['total_allocated'] > 0)
+        ->sortByDesc('total_allocated')
+        ->values();
+
+        $grandTotalAllocated = $rows->sum('total_allocated');
+
+        return response()->json([
+            'total_saldo_kas'         => $totalKas,
+            'total_from_fund_sources' => $grandTotalAllocated,
+            'untracked_amount'        => $totalKas - $grandTotalAllocated,
+            'percentage_tracked'      => $totalKas > 0
+                ? round(($grandTotalAllocated / $totalKas) * 100, 2)
+                : 0,
+            'breakdown'               => $rows,
+        ]);
+    }
+
+    /**
+     * GET /projects/{project}/kas-breakdown-by-fund-source
+     *
+     * Per-project variant: breakdown of InitialAllocation fund_movements scoped
+     * to a single destination project. Works for both isolated and non-isolated
+     * projects.  The caller's total_saldo_kas is passed in as a query param so
+     * percentage_of_kas can be computed without re-fetching the summary.
+     */
+    public function projectKasBreakdownByFundSource(Project $project, Request $request): \Illuminate\Http\JsonResponse
+    {
+        // Total saldo kas for this project (passed from frontend to avoid an extra round-trip,
+        // or computed here if not provided)
+        $totalKas = $request->has('total_saldo_kas')
+            ? (float) $request->input('total_saldo_kas')
+            : null;
+
+        if ($totalKas === null) {
+            if ($project->is_isolated_cash) {
+                $totalKas = (float) ProjectKasTransaction::where('project_id', $project->id)->sum('income')
+                          - (float) ProjectKasTransaction::where('project_id', $project->id)->sum('expense');
+            } else {
+                $totalKas = (float) Transaction::where('project_id', $project->id)->sum('income')
+                          - (float) Transaction::where('project_id', $project->id)->sum('expense');
+            }
+        }
+
+        // Calculate InitialAllocation - Withdrawal per fund source, limited to this project
+        $fundSources = \App\Models\FundSource::all();
+        $rows = $fundSources->map(function ($fs) use ($totalKas, $project) {
+            $in = \App\Models\FundMovement::where('fund_source_id', $fs->id)
+                ->where('type', \App\Enums\FundMovementType::InitialAllocation->value)
+                ->where('destination_project_id', $project->id)
+                ->sum('amount');
+
+            $out = \App\Models\FundMovement::where('fund_source_id', $fs->id)
+                ->where('type', \App\Enums\FundMovementType::Withdrawal->value)
+                ->where('source_project_id', $project->id)
+                ->sum('amount');
+
+            $allocated = (float)$in - (float)$out;
+
+            return [
+                'fund_source_id'    => $fs->id,
+                'fund_source_name'  => $fs->name,
+                'fund_source_type'  => $fs->type,
+                'initial_amount'    => (float) $fs->initial_amount,
+                'total_allocated'   => $allocated,
+                'percentage_of_kas' => $totalKas > 0 && $allocated > 0
+                    ? round(($allocated / $totalKas) * 100, 2)
+                    : 0,
+            ];
+        })
+        ->filter(fn($row) => $row['total_allocated'] > 0)
+        ->sortByDesc('total_allocated')
+        ->values();
+
+        $grandTotalAllocated = $rows->sum('total_allocated');
+
+        return response()->json([
+            'total_saldo_kas'         => $totalKas,
+            'total_from_fund_sources' => $grandTotalAllocated,
+            'untracked_amount'        => $totalKas - $grandTotalAllocated,
+            'percentage_tracked'      => $totalKas > 0
+                ? round(($grandTotalAllocated / $totalKas) * 100, 2)
+                : 0,
+            'breakdown'               => $rows,
         ]);
     }
 

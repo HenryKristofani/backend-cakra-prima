@@ -133,6 +133,47 @@ class ProjectController extends Controller
         return response()->json($project);
     }
 
+    public function fundSources(int $id): JsonResponse
+    {
+        $project = Project::findOrFail($id);
+
+        $sql = "
+            SELECT 
+                fs.id, 
+                fs.name, 
+                (COALESCE(i.total_in, 0) - COALESCE(o.total_out, 0)) as current_amount
+            FROM fund_sources fs
+            LEFT JOIN (
+                SELECT fund_source_id, SUM(amount) as total_in
+                FROM fund_movements
+                WHERE destination_project_id = ?
+                GROUP BY fund_source_id
+            ) i ON i.fund_source_id = fs.id
+            LEFT JOIN (
+                SELECT fund_source_id, SUM(amount) as total_out
+                FROM fund_movements
+                WHERE source_project_id = ?
+                GROUP BY fund_source_id
+            ) o ON o.fund_source_id = fs.id
+            WHERE (COALESCE(i.total_in, 0) - COALESCE(o.total_out, 0)) > 0
+        ";
+
+        $results = \Illuminate\Support\Facades\DB::select($sql, [$id, $id]);
+
+        $breakdown = array_map(function ($row) {
+            return [
+                'fund_source_id' => $row->id,
+                'fund_source_name' => $row->name,
+                'current_amount' => (float) $row->current_amount,
+            ];
+        }, $results);
+
+        return response()->json([
+            'project' => $project,
+            'fund_sources' => $breakdown
+        ]);
+    }
+
     #[OA\Put(
         path: "/api/projects/{id}",
         summary: "Update project",

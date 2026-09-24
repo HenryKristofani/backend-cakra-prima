@@ -11,6 +11,7 @@ class ProjectKasTransaction extends Model
         'project_id',
         'user_id',
         'rap_item_id',
+        'fund_movement_id',
         'date',
         'company',
         'description',
@@ -38,5 +39,10 @@ class ProjectKasTransaction extends Model
     public function rapItem(): BelongsTo
     {
         return $this->belongsTo(RapItem::class, 'rap_item_id');
+    }
+
+    public function fundMovement(): BelongsTo
+    {
+        return $this->belongsTo(FundMovement::class);
     }
 }
